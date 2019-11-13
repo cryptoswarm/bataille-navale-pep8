@@ -53,10 +53,10 @@ msgDisp:         STRO askMsg1, d
                  STRO askMsg4, d
 
                  CALL sizeBoat
-                 STRO retMsg, d 
-                 CALL rowCheck
-                 ;CALL main 
-                 STRO retMsg, d 
+                 STRO retMsgb, d 
+
+                 ;CALL rowCheck 
+                 ;STRO retMsg, d 
 
 
 
@@ -112,16 +112,56 @@ ltmnmsg:	            .ASCII  "plus petit que 1\x00"
 gtmxmsg:	            .ASCII  "nombre de rangee est plus grand que 9 !\x00"
 carBidon: .BLOCK 1
 
+;---------------------------------------------------------------
+
 ;Methode verifiant si la grandeur du bateau et correcte ou non 
-sizeBoat:             CHARI	nb, d
+;---------------------------------------------------------------
+sizeBoat:            CHARI	chr, d
+                     ;CHARI carBidon, d
+                     LDA 0,i
+                     LDBYTEA	chr, d
+                     
+                     
+                     CPA	'p', i
+                     ;CPA	lettreP, d
+                     BREQ	eqCharP
+                     ;RET0
+                     CPA	'm', i
+                     ;CPA	lettreM, d
+                     BREQ	eqCharm 
+                     ;RET0
+                     CPA	'g', i
+                     ;CPA	lettreG, d   
+                     BREQ	eqCharg
+                     ;RET0
+                     STRO        notAccep, d
+                     RET0
+                     
+;notlet:		STRO	nletmsg, d 
+		;BR	out 
+eqCharP:		STRO	msgCarP, d
+RET0
+eqCharm:              STRO	msgCarM, d
+RET0 
+eqCharg:              STRO	msgCarG, d
+RET0
+;out:		STOP
 
+; Char to compare
+lettreP:              .BYTE 'p'
+lettreM:              .BYTE 'm'
+lettreG:              .BYTE 'g'
+;chr:		.BLOCK 1
+chr:		.BYTE 1
 
-
-
-
-
-
-
+; Is a letter message
+msgCarP:		.ASCII "le char entre est p\n\x00"
+msgCarM:              .ASCII "le char entre est m\n\x00"
+msgCarG:              .ASCII "le char entre est g\n\x00"
+; Is not a letter message
+notAccep:	.ASCII "lettre "  
+            CHARO chr, d
+           .ASCII "ou char diffrent de ce qui est demandé\n\x00"
 
 		
 
@@ -370,6 +410,8 @@ askMsg2: .ASCII "selon le format suivant, separes par des espaces: \n\x00"
 askMsg3: .ASCII "taille[p/m/g] orientation[h/v] colonne[A-R] rangée[1-9] \n\x00"
 askMsg4: .ASCII "ex: ghC4 mvM2 phK9 \n\x00" 
 retMsg: .ASCII "Je suis de retour\n\x00" 
+retMsgb: .ASCII "Je suis de retour apres verif de grandeur boat\n\x00"
+
          
 
 .end
