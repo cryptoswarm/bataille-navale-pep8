@@ -47,16 +47,26 @@ next_ix: CHARO   '\n',i
 
 ;-----------------------------------------------------------------
 
-msgDisp:         STRO askMsg1, d 
-                 STRO askMsg2, d 
-                 STRO askMsg3, d 
-                 STRO askMsg4, d
+msgDisp:         STRO askMsg, d 
+             
 
                  CALL sizeBoat
-                 STRO retMsgb, d 
+                 STRO retMsgb, d
+                 ;CHARO carSize, d
+                 CHARO '\n', i
+ 
+                 CALL dirBoat
+                 STRO retMsgD, d
+                 CHARO '\n', i
 
-                 ;CALL rowCheck 
-                 ;STRO retMsg, d 
+                 CALL colBoat
+                 STRO retMsgC, d
+                 CHARO '\n', i
+                 
+
+                 CALL rowBoat 
+                 STRO retMsg, d
+                 CHARO '\n', i
 
 
 
@@ -73,53 +83,14 @@ fini:    stop
 
 
 
-;Methode verifiant si la rangee est entre  min =1 et max=9
-
-rowCheck:             CHARI	nb, d
-                      CHARI carBidon, d
-                      ;LDBYTEA	nb, d
-                      LDA	nb, d
-		CPA	min, d
-                      ;CPA	1', i
-		BRLT	ltmin
-		CPA	max, d 
-                      ;CPA	9', i
-		BRGT	gtmax
-		STRO	inbmsg, d
-                      RET0
-		;BR	out
-ltmin:		STRO	ltmnmsg, d
-                      RET0
-		;BR	out 
-gtmax:		STRO	gtmxmsg, d
-;out:		STOP
-                      RET0
-
-min:		.BYTE '0'
-;min:		.BYTE 0x01
-;min:		.WORD 31
-max:		.BYTE '9'
-;max:		.BYTE 0x09
-;max:		.WORD 39
-nb:		.BLOCK 2
-;nb:		.BYTE 0'
-
-; In bounds message; msg va etre affiché si le nm de rangés est: 1<=nb=<9
-inbmsg:		.ASCII   "nombre de rangee est correcte\x00"
-; Lower than min message
-ltmnmsg:	            .ASCII  "plus petit que 1\x00"
-; Higher than max message
-gtmxmsg:	            .ASCII  "nombre de rangee est plus grand que 9 !\x00"
-carBidon: .BLOCK 1
-
 ;---------------------------------------------------------------
 
 ;Methode verifiant si la grandeur du bateau et correcte ou non 
 ;---------------------------------------------------------------
-sizeBoat:            CHARI	chr, d
+sizeBoat:            CHARI	carSize, d
                      ;CHARI carBidon, d
                      LDA 0,i
-                     LDBYTEA	chr, d
+                     LDBYTEA	carSize, d
                      
                      
                      CPA	'p', i
@@ -152,21 +123,154 @@ lettreP:              .BYTE 'p'
 lettreM:              .BYTE 'm'
 lettreG:              .BYTE 'g'
 ;chr:		.BLOCK 1
-chr:		.BYTE 1
+carSize:		.BYTE 1
 
 ; Is a letter message
 msgCarP:		.ASCII "le char entre est p\n\x00"
 msgCarM:              .ASCII "le char entre est m\n\x00"
 msgCarG:              .ASCII "le char entre est g\n\x00"
 ; Is not a letter message
-notAccep:	.ASCII "lettre "  
-            CHARO chr, d
-           .ASCII "ou char diffrent de ce qui est demandé\n\x00"
+notAccep:	.ASCII "lettre ou char diffrent de ce qui est demandé\n\x00"
+;---------------------------------------------------------------------------
+;--Methode vérifiant si l'orientation du bateau entré est correcte ou non --
 
+;---------------------------------------------------------------------------
+
+dirBoat:            CHARI	cardir, d
+                     ;CHARI carBidon, d
+                     LDA 0,i
+                     LDBYTEA	cardir, d
+                     
+                     
+                     CPA	'v', i
+                     ;CPA	lettreP, d
+                     BREQ	eqCharV
+                     ;RET0
+                     CPA	'h', i
+                     ;CPA	lettreM, d
+                     BREQ	eqCharH 
+                     ;RET0
+                     
+                     STRO        dirNAcep, d 
+                     RET0
+                     
+;notlet:		STRO	nletmsg, d 
+		;BR	out 
+eqCharV:		STRO	msgCarV, d
+RET0
+eqCharH:              STRO	msgCarH, d
+RET0 
+
+;out:		STOP
+
+; Char to compare
+lettreV:              .BYTE 'v'
+lettreH:              .BYTE 'h'
+
+;chr:		.BLOCK 1
+cardir:		.BYTE 1 
+
+; Is a letter message
+msgCarV:		.ASCII "le char entre est v\n\x00"
+msgCarH:              .ASCII "le char entre est h\n\x00"
+
+; Is not a letter message
+dirNAcep:	.ASCII "lettre "  
+            CHARO cardir, d
+           .ASCII "ou char diffrent de ce qui est demandé\n\x00" 
+;-----------------------------------------------------------------------------------
+;--Methode vérifiant si la lettre designant la colonne  entré est correcte ou non --
+
+;-----------------------------------------------------------------------------------
+colBoat:             CHARI	colChar, d
+                     LDA 0,i
+                     LDBYTEA	colChar, d
+                     
+                     
+                     CPA	'A', i
+                     ;CPA	lettreA, d
+                     BRLT	underA  ; inferieur à A
+                     ;RET0
+                     CPA	'R', i
+                     ;CPA	lettreZ, d
+                     BRLE	peOreqR 
+                     ;RET0
+                     
+                     STRO        notaLet, d
+                     RET0
+                     
+;notlet:		STRO	nletmsg, d 
+		;BR	out 
+underA:		STRO	msgpeA, d
+RET0
+peOreqR:              STRO	msgPeR, d
+RET0 
+
+
+;out:		STOP
+
+; Char to compare
+lettreA:              .BYTE 'A'
+lettreZ:              .BYTE 'Q'
+
+;chr:		.BLOCK 1
+colChar:		.BYTE 1 
+
+; Is a letter message
+msgpeA:		.ASCII "le char entre est inferieur à A\n\x00"
+msgPeR:                .ASCII "le char entre est petit ou egal  R\n\x00"
+
+; Is not a letter message
+         
+notaLet:	.ASCII "lettre n'est pas entre A et Q \n\x00"
+
+
+;------------------------------------------------------------
+;Methode verifiant si la rangee est entre  min =1 et max=9
+;------------------------------------------------------------
+
+rowBoat:              CHARI	nb, d
+                      ;CHARI carBidon, d
+                      LDA 0,i
+                      LDBYTEA	nb, d
+                      ;LDA	nb, d
+		;CPA	min, d
+                      CPA	'1', i
+		BRLT	ltmin
+		;CPA	max, d 
+                      CPA	'9', i
+		BRLE	gtmax
+		STRO	outbmsg, d
+                      RET0
+		;BR	out
+ltmin:		STRO	ltmnmsg, d
+                      RET0
+		;BR	out 
+gtmax:		STRO	gtmxmsg, d
+;out:		STOP
+                      RET0
+
+min:		.BYTE '0'
+;min:		.BYTE 0x01
+;min:		.WORD 31
+max:		.BYTE '9'
+;max:		.BYTE 0x09
+;max:		.WORD 39
+nb:		.BLOCK 2
+;nb:		.BYTE 0'
+
+; In bounds message; msg va etre affiché si le nm de rangés est: 1<=nb=<9
+outbmsg:		.ASCII   "nombre de rangee est incorrecte\x00"
+; Lower than min message
+ltmnmsg:	            .ASCII  "plus petit que 1\x00"
+; Higher than max message
+gtmxmsg:	            .ASCII  "nombre de rangee est petit ou egale 9 !\x00"
+carBidon: .BLOCK 1
 		
 
-;-----------------------------------------------------------------
-;Declaration, reservation espace memoire et  initialisation 
+;-------------------------------------------------------------------------
+;------  Declaration, reservation espace memoire et  initialisation ------
+;-------------------------------------------------------------------------
 ; Current line Index
 lnIndex: .WORD 0
 
@@ -189,7 +293,7 @@ matrix:  .ADDRSS ln1         ; #2h
 totSize: .equate 48       ;CHANGER avant equate 24 pour 3x4 | critere pour taille de matrice (x2)
 
 iSize:   .equate 20       ;18 parceque la matrice contien 9 lignes
-jSize:   .equate 36       ;36 parceque la matrice contien 18 lignes
+jSize:   .equate 38       ;36 parceque la matrice contien 18 lignes
 
 
 ptr:     .BLOCK 2            
@@ -405,12 +509,14 @@ temp:    .block  2           ;reservé 2 octet à temp
 
 welMsg: .ASCII "Bienvenue au jeu de bataille navale! \n\x00"
 
-askMsg1: .ASCII "Entrer la description et la position des bateaux \n\x00"
-askMsg2: .ASCII "selon le format suivant, separes par des espaces: \n\x00"
-askMsg3: .ASCII "taille[p/m/g] orientation[h/v] colonne[A-R] rangée[1-9] \n\x00"
-askMsg4: .ASCII "ex: ghC4 mvM2 phK9 \n\x00" 
+askMsg: .ASCII "Entrer la description et la position des bateaux \n"
+         .ASCII "selon le format suivant, separes par des espaces: \n"
+         .ASCII "taille[p/m/g] orientation[h/v] colonne[A-R] rangée[1-9] \n"
+         .ASCII "ex: ghC4 mvM2 phK9 \n\x00" 
 retMsg: .ASCII "Je suis de retour\n\x00" 
 retMsgb: .ASCII "Je suis de retour apres verif de grandeur boat\n\x00"
+retMsgD: .ASCII "Je suis de retour apres verif de l'orientation boat\n\x00"
+retMsgC: .ASCII "Je suis de retour apres verif de la colonne boat\n\x00"
 
          
 
