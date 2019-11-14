@@ -53,7 +53,7 @@ msgDisp:         STRO askMsg, d
                ;  BRGE erreur               ; qui decrivent les bateaux
 ;erreur:         ; STRO askMsg, d             
 
-repeat:           CALL sizeBoat
+repeat:          CALL sizeBoat
                  STRO retMsgb, d
                  CHARO boatSize, d 
                  
@@ -72,7 +72,7 @@ repeat:           CALL sizeBoat
 
                  CALL rowBoat 
                  STRO retMsg, d
-                 CHARO nb, d
+                 CHARO boatRow, d
                  CHARO '\n', i
 
                  CALL checkgap
@@ -125,22 +125,22 @@ case3:           LDA 0,i
                  BREQ casePV ; cas  petite et vertical
 
 ; Si la taille de bateau est grande et la direction est Horizontale on execute ce code
-caseGH:
+caseGH: CHARO 'G',i 
 
 
 ; Si la taille de bateau est grande et la direction est Verticale on execute ce code
-caseGV:
+caseGV: CHARO 'G',i 
 
 ; Si la taille de bateau est moyenne et la direction est Horizontale on execute ce code
-caseMH:
+caseMH: CHARO 'M',i 
 
 ; Si la taille de bateau est moyenne et la direction est Verticale on execute ce code
-caseMV: 
+caseMV: CHARO 'M',i 
 ; Si la taille de bateau est petite et la direction est Horizontale on execute ce code
-casePH:
+casePH: CHARO 'P',i 
 
 ; Si la taille de bateau est petite et la direction est Verticale on execute ce code
-casePV:
+casePV: CHARO 'P',i 
                 
 
 
@@ -171,21 +171,44 @@ sizeBoat:            CHARI	boatSize, d
                      
                      CPA	'p', i
                      ;CPA	lettreP, d
-                     BREQ	eqCharP
+                     ;BREQ	eqCharP
+                     BREQ        loadBoat
+ 
+                             
+                     ;if p, convert to 1 bit 
                      ;RET0
                      CPA	'm', i
                      ;CPA	lettreM, d
-                     BREQ	eqCharm 
+                     ;BREQ	eqCharm 
+                     BREQ        loadBoat
+                     ;if p, convert to 3 bit 
                      ;RET0
                      CPA	'g', i
                      ;CPA	lettreG, d   
-                     BREQ	eqCharg
+                     ;BREQ	eqCharg
+                     BREQ        loadBoat
+                    ;if p, convert to 5 bit 
                      ;RET0
-                     STRO        notAccep, d
+                     CALL         msgDisp, i
+                     ;STRO        notAccep, d
                      RET0
                      
 ;notlet:		STRO	nletmsg, d 
 		;BR	out 
+
+loadBoat:                        LDX            sizeix, d
+                                           LDA            sizeVec, x
+                                           STA            sizeptr, d ; ptr -> vecteur[i]
+                                           LDX            sizeptr, d
+                                           ADDX         sizejx, d ; X -> vecteur[i][j]
+                                           LDA            boatSize, d ; vecteur[i][j] = nb_lu
+                                           STA            0, x
+                                           LDX            sizejx, d
+                                           ADDX         2, i
+                                           STX            sizejx, d
+                    RET0
+
+
 eqCharP:		STRO	msgCarP, d
 RET0
 eqCharm:              STRO	msgCarM, d
@@ -207,6 +230,12 @@ msgCarM:              .ASCII "le char entre est m\n\x00"
 msgCarG:              .ASCII "le char entre est g\n\x00"
 ; Is not a letter message
 notAccep:	.ASCII "lettre ou char diffrent de ce qui est demandé\n\x00"
+
+sizeix:      .BLOCK 2 ; #2d itérateur ix pour tri
+sizejx:      .BLOCK 2 ; #2d itérateur jx pour tri 
+sizeVec: .ADDRSS sizer1 ; #2h 
+sizeptr: .BLOCK 2    ; #2h 
+sizer1: .BLOCK 8 ; #2d4a 
 ;---------------------------------------------------------------------------
 ;--Methode vérifiant si l'orientation du bateau entré est correcte ou non --
 
@@ -220,11 +249,13 @@ dirBoat:            CHARI	boatdir, d
                      
                      CPA	'v', i
                      ;CPA	lettreP, d
-                     BREQ	eqCharV
+                     ;BREQ	eqCharV
+                     BREQ	loaddir
                      ;RET0
                      CPA	'h', i
                      ;CPA	lettreM, d
-                     BREQ	eqCharH 
+                     ;BREQ	eqCharH 
+                     BREQ	loaddir
                      ;RET0
                      
                      STRO        dirNAcep, d 
@@ -236,6 +267,18 @@ eqCharV:		STRO	msgCarV, d
 RET0
 eqCharH:              STRO	msgCarH, d
 RET0 
+
+loaddir:                          LDX              dirix, d
+                                           LDA            dirVec, x
+                                           STA            dirptr, d ; ptr -> vecteur[i]
+                                           LDX            dirptr, d
+                                           ADDX         dirjx, d ; X -> vecteur[i][j]
+                                           LDA           boatdir, d ; vecteur[i][j] = nb_lu
+                                           STA            0, x
+                                           LDX            dirjx, d
+                                           ADDX         2, i
+                                           STX            dirjx, d
+                    RET0
 
 ;out:		STOP
 
@@ -252,6 +295,12 @@ msgCarH:              .ASCII "le char entre est h\n\x00"
 
 ; Is not a letter message
 dirNAcep:	.ASCII "lettre ou char diffrent de ce qui est demandé\n\x00" 
+
+dirix:      .BLOCK 2 ; #2d itérateur ix pour tri
+dirjx:      .BLOCK 2 ; #2d itérateur jx pour tri 
+dirVec:   .ADDRSS sizer1 ; #2h 
+dirptr:     .BLOCK 2    ; #2h 
+dirr1:     .BLOCK 8 ; #2d4a 
 ;-----------------------------------------------------------------------------------
 ;--Methode vérifiant si la lettre designant la colonne  entré est correcte ou non --
 
@@ -267,7 +316,8 @@ colBoat:             CHARI	boatCol, d
                      ;RET0
                      CPA	'R', i
                      ;CPA	lettreZ, d
-                     BRLE	peOreqR 
+                     ;BRLE	peOreqR 
+                     BRLE        loadCol
                      ;RET0
                      
                      STRO        notaLet, d
@@ -278,7 +328,20 @@ colBoat:             CHARI	boatCol, d
 underA:		STRO	msgpeA, d
 RET0
 peOreqR:              STRO	msgPeR, d
-RET0 
+RET0
+
+
+loadCol:                          LDX            colix, d
+                                           LDA            colVec, x
+                                           STA            colptr, d ; ptr -> vecteur[i]
+                                           LDX            colptr, d
+                                           ADDX         coljx, d ; X -> vecteur[i][j]
+                                           LDA           boatCol, d ; vecteur[i][j] = nb_lu
+                                           STA            0, x
+                                           LDX            coljx, d
+                                           ADDX         2, i
+                                           STX            coljx, d
+                    RET0 
 
 
 ;out:		STOP
@@ -298,19 +361,24 @@ msgPeR:                .ASCII "le char entre est petit ou egal  R\n\x00"
          
 notaLet:	.ASCII "lettre n'est pas entre A et Q \n\x00"
 
-
+colix:      .BLOCK 2 ; #2d itérateur ix pour tri
+coljx:      .BLOCK 2 ; #2d itérateur jx pour tri 
+colVec:   .ADDRSS sizer1 ; #2h 
+colptr:     .BLOCK 2    ; #2h 
+colr1:     .BLOCK 8 ; #2d4a
 ;------------------------------------------------------------
 ;Methode verifiant si la rangee est entre  min =1 et max=9
 ;------------------------------------------------------------
 
-rowBoat:              CHARI	nb, d
+rowBoat:              CHARI	boatRow, d
                       LDA 0,i
-                      LDBYTEA	nb, d
+                      LDBYTEA	boatRow, d
                       CPA	'1', i
 		BRLT	ltmin
 		
                       CPA	'9', i
-		BRLE	gtmax
+		;BRLE	gtmax
+                      BRLE	loadrow
 		STRO	outbmsg, d
                       RET0
 		
@@ -320,9 +388,21 @@ ltmin:		STRO	ltmnmsg, d
 gtmax:		STRO	gtmxmsg, d
                       RET0
 
+loadrow:                          LDX            rowix, d
+                                           LDA            rowVec, x
+                                           STA            rowptr, d ; ptr -> vecteur[i]
+                                           LDX            rowptr, d
+                                           ADDX         rowjx, d ; X -> vecteur[i][j]
+                                           LDA           boatRow, d ; vecteur[i][j] = nb_lu
+                                           STA            0, x
+                                           LDX           rowjx, d
+                                           ADDX         2, i
+                                           STX            rowjx, d
+                    RET0 
+
 min:		.BYTE '0'
 max:		.BYTE '9'
-nb:		.BLOCK 2
+boatRow:		.BLOCK 2
 
 
 ; In bounds message; msg va etre affiché si le nm de rangés est: 1<=nb=<9
@@ -332,6 +412,12 @@ ltmnmsg:	            .ASCII  "plus petit que 1\x00"
 ; Higher than max message
 gtmxmsg:	            .ASCII  "nombre de rangee est petit ou egale 9 !\x00"
 carBidon: .BLOCK 1
+
+rowix:      .BLOCK 2 ; #2d itérateur ix pour tri
+rowjx:      .BLOCK 2 ; #2d itérateur jx pour tri 
+rowVec:   .ADDRSS sizer1 ; #2h 
+rowptr:     .BLOCK 2    ; #2h 
+rowr1:     .BLOCK 8 ; #2d4a
 
 ;------------------------------------------------------------
 ;Methode verifiant si le char est un espace 
