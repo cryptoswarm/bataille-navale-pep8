@@ -27,18 +27,7 @@ iloop:   CPX     iSize,i
          DECO    range,d
          CHARO  '|',i 
 
-;loop_i:          CPX         18,i
-                 ;BRGE        suite ;for(line=0;line < 324; line += 36) {
-                 ;LDX         0,i
-                 ;STX         column,d
-                 ;DECO        range,d
-                 ;CHARO       '|',i
-
-;loop_j:          CPX         36,i
-                 ;BRGE        next_i ;for(column =0;column < 36; column += 2) {
-                 ;ADDX        line,d
-
-                 ;CHARO        mer,i ;print(~); 
+ 
 
          
 jloop:   CPX     jSize,i
@@ -51,15 +40,13 @@ jloop:   CPX     jSize,i
          LDX     ptr,d
          ADDX    jx,d
          LDA     tild,i
-         ;adda    1,i
-         ;STA     ptr,d
-         ;LDX     column,d
+     
          STA     0,x 
          LDX     jx,d
          ADDX    2,i 
-         ;STX     column,d
+        
          STX     jx,d 
-         BR      jloop ; } // fin for column 
+         BR      jloop 
 
 next_ix: CHARO   '|',i
          CHARO   '\n',i
@@ -156,7 +143,25 @@ case3:           LDA 0,i
                  BREQ casePV ; cas  petite et vertical
 
 ; Si la taille de bateau est grande et la direction est Horizontale on execute ce code
-caseGH: CHARO 'G',i 
+caseGH: LDA 0,i      ;CHARO G',i            
+        LDBYTEA boatCol, d
+        CHARO   boatCol, d   
+        SUBA   'A',i    ; soutrait A de la valeur de la colonne dans l'accumulateur afin d'obtenir l'indice column
+        ASLA            ; multiplie la valeur obtenue par 2 pour l'incrementation
+        STA     tempCol,d
+        DECO    tempCol,d
+
+        LDBYTEA     boatRow,d
+        CHARO   boatRow, d
+        SUBA        49,i
+        STA     tempRow,d
+        DECO    tempRow,d
+
+;carVert:      .EQUATE 0x0076   ; char v
+;carHori:      .EQUATE 0x003E   ; char > 
+        
+        
+        
 
 
 ; Si la taille de bateau est grande et la direction est Verticale on execute ce code
@@ -227,17 +232,17 @@ sizeBoat:            CHARI	boatSize, d
 ;notlet:		STRO	nletmsg, d 
 		;BR	out 
 
-loadBoat:                        LDX            sizeix, d
-                                           LDA            sizeVec, x
-                                           STA            sizeptr, d ; ptr -> vecteur[i]
-                                           LDX            sizeptr, d
-                                           ADDX         sizejx, d ; X -> vecteur[i][j]
-                                           LDA            boatSize, d ; vecteur[i][j] = nb_lu
-                                           STA            0, x
-                                           LDX            sizejx, d  ; maybe it is wrong to load sizejx 
-                                           ADDX         2, i
-                                           STX            sizejx, d
-                    RET0
+loadBoat:            LDX            sizeix, d
+                     LDA            sizeVec, x
+                     STA            sizeptr, d ; ptr -> vecteur[i]
+                     LDX            sizeptr, d
+                     ADDX           sizejx, d ; X -> vecteur[i][j]
+                     LDA            boatSize, i ; vecteur[i][j] = nb_lu
+                     STA            0, x
+                     LDX            sizejx, d  ; maybe it is wrong to load sizejx 
+                     ADDX           2, i
+                     STX            sizejx, d
+                     RET0
 
 
 eqCharP:		STRO	msgCarP, d
@@ -301,16 +306,16 @@ eqCharH:              STRO	msgCarH, d
 RET0 
 
 loaddir:                          LDX            dirix, d
-                                           LDA            dirVec, x
-                                           STA            dirptr, d         ; directionptr -> directionVecteur[i]
-                                           LDX            dirptr, d
-                                           ADDX         dirjx, d          ; X -> dirVecteur[i][j]
-                                           LDA           boatdir, d   ; dirvecteur[i][j] = boatdirection
-                                           STA            0, x
-                                           LDX            dirjx, d
-                                           ADDX         2, i
-                                           STX            dirjx, d
-                    RET0
+                      LDA            dirVec, x
+                      STA            dirptr, d         ; directionptr -> directionVecteur[i]
+                      LDX            dirptr, d
+                      ADDX         dirjx, d          ; X -> dirVecteur[i][j]
+                      LDA           boatdir, d   ; dirvecteur[i][j] = boatdirection
+                      STA            0, x
+                      LDX            dirjx, d
+                      ADDX         2, i
+                      STX            dirjx, d
+                      RET0
 
 
 ;out:		STOP
@@ -364,17 +369,17 @@ peOreqR:              STRO	msgPeR, d
 RET0
 
 
-loadCol:                          LDX            colix, d
-                                           LDA            colVec, x
-                                           STA            colptr, d ; ptr -> vecteur[i]
-                                           LDX            colptr, d
-                                           ADDX         coljx, d ; X -> vecteur[i][j]
-                                           LDA           boatCol, d ; vecteur[i][j] = nb_lu
-                                           STA            0, x
-                                           LDX            coljx, d
-                                           ADDX         2, i
-                                           STX            coljx, d
-                    RET0 
+loadCol:           LDX            colix, d
+                   LDA            colVec, x
+                   STA            colptr, d ; ptr -> vecteur[i]
+                   LDX            colptr, d
+                   ADDX         coljx, d ; X -> vecteur[i][j]
+                   LDA           boatCol, d ; vecteur[i][j] = nb_lu
+                   STA            0, x
+                   LDX            coljx, d
+                   ADDX         2, i
+                   STX            coljx, d
+                   RET0 
 
 
 ;out:		STOP
@@ -421,17 +426,17 @@ ltmin:		STRO	ltmnmsg, d
 gtmax:		STRO	gtmxmsg, d
                       RET0
 
-loadrow:                          LDX            rowix, d
-                                           LDA            rowVec, x
-                                           STA            rowptr, d ; ptr -> vecteur[i]
-                                           LDX            rowptr, d
-                                           ADDX         rowjx, d ; X -> vecteur[i][j]
-                                           LDA           boatRow, d ; vecteur[i][j] = nb_lu
-                                           STA            0, x
-                                           LDX           rowjx, d
-                                           ADDX         2, i
-                                           STX            rowjx, d
-                    RET0 
+loadrow:              LDX            rowix, d
+                      LDA            rowVec, x
+                      STA            rowptr, d ; ptr -> vecteur[i]
+                      LDX            rowptr, d
+                      ADDX           rowjx, d ; X -> vecteur[i][j]
+                      LDA            boatRow, d ; vecteur[i][j] = nb_lu
+                      STA            0, x
+                      LDX            rowjx, d
+                      ADDX           2, i
+                      STX            rowjx, d
+                      RET0 
 
 min:		.BYTE '0'
 max:		.BYTE '9'
@@ -448,8 +453,8 @@ carBidon: .BLOCK 1
 
 rowix:      .BLOCK 2 ; #2d itérateur ix pour tri
 rowjx:      .BLOCK 2 ; #2d itérateur jx pour tri 
-rowVec:   .ADDRSS rowr1 ; #2h 
-rowptr:     .BLOCK 2    ; #2h 
+rowVec:    .ADDRSS rowr1 ; #2h 
+rowptr:    .BLOCK 2    ; #2h 
 rowr1:     .BLOCK 8 ; #2d4a
 
 ;------------------------------------------------------------
@@ -520,207 +525,20 @@ ln9:              .BLOCK 36 ; #2d18a
 
 ALPHA:        .ASCII "  ABCDEFGHIJKLMNOPQR\n\x00"           
 
-;ln1:     .WORD ' ' ; #2d4a 
-         .WORD 'A'
-         .WORD 'B'
-         .WORD 'C'            
-         .WORD 'D'
-         .WORD 'E'
-         .WORD 'F'
-         .WORD 'G'
-         .WORD 'H'
-         .WORD 'I'            
-         .WORD 'G'
-         .WORD 'K'
-         .WORD 'L'
-         .WORD 'M'
-         .WORD 'N'            
-         .WORD 'O'
-         .WORD 'P'
-         .WORD 'Q'
-         .WORD 'R'
-tild:    .EQUATE 0x007E
+tild:         .EQUATE 0x007E   ; char ~
+carVert:      .EQUATE 0x0076   ; char v
+carHori:      .EQUATE 0x003E   ; char > 
+emptyO:       .EQUATE 0x006F   ; char o , si aucune partie de boat n'est toucheé
+tempCol:      .BLOCK 2
+tempRow:      .BLOCK 2
 
-;ln2:     .WORD '1' ; #2d4a 
-         .WORD '~'
-         .WORD '~'
-         .WORD '~'             
-         .WORD '~'
-         .WORD '~'
-         .WORD '~'
-         .WORD '~'
-         .WORD '~'             
-         .WORD '~'
-         .WORD '~'
-         .WORD '~'
-         .WORD '~'             
-         .WORD '~'
-         .WORD '~'
-         .WORD '~'
-         .WORD '~'
-         .WORD '~'             
-         .WORD '~'
+                
+                   
+    
+     
+                   
+        
          
-
-;ln3:     .WORD 2' ; #2d4a
-         .WORD '~'
-         .WORD '~'
-         .WORD '~'             
-         .WORD '~'
-         .WORD '~'
-         .WORD '~'
-         .WORD '~'
-         .WORD '~'             
-         .WORD '~'
-         .WORD '~'
-         .WORD '~'
-         .WORD '~'             
-         .WORD '~'
-         .WORD '~'
-         .WORD '~'
-         .WORD '~'
-         .WORD '~'             
-         .WORD '~'
-
-;ln4:     .WORD 3' ; #2d4a
-         .WORD '~'
-         .WORD '~'
-         .WORD '~'             
-         .WORD '~'
-         .WORD '~'
-         .WORD '~'
-         .WORD '~'
-         .WORD '~'             
-         .WORD '~'
-         .WORD '~'
-         .WORD '~'
-         .WORD '~'             
-         .WORD '~'
-         .WORD '~'
-         .WORD '~'
-         .WORD '~'
-         .WORD '~'             
-         .WORD '~'
-
-;ln5:     .WORD 4' ; #2d4a
-         .WORD '~'
-         .WORD '~'
-         .WORD '~'             
-         .WORD '~'
-         .WORD '~'
-         .WORD '~'
-         .WORD '~'
-         .WORD '~'             
-         .WORD '~'
-         .WORD '~'
-         .WORD '~'
-         .WORD '~'             
-         .WORD '~'
-         .WORD '~'
-         .WORD '~'
-         .WORD '~'
-         .WORD '~'             
-         .WORD '~'
-
-;ln6:     .WORD 5' ; #2d4a
-         .WORD '~'
-         .WORD '~'
-         .WORD '~'             
-         .WORD '~'
-         .WORD '~'
-         .WORD '~'
-         .WORD '~'
-         .WORD '~'             
-         .WORD '~'
-         .WORD '~'
-         .WORD '~'
-         .WORD '~'             
-         .WORD '~'
-         .WORD '~'
-         .WORD '~'
-         .WORD '~'
-         .WORD '~'             
-         .WORD '~'
-
-;ln7:     .WORD 6' ; #2d4a
-         .WORD '~'
-         .WORD '~'
-         .WORD '~'             
-         .WORD '~'
-         .WORD '~'
-         .WORD '~'
-         .WORD '~'
-         .WORD '~'             
-         .WORD '~'
-         .WORD '~'
-         .WORD '~'
-         .WORD '~'             
-         .WORD '~'
-         .WORD '~'
-         .WORD '~'
-         .WORD '~'
-         .WORD '~'             
-         .WORD '~'
-
-;ln8:     .WORD 7' ; #2d4a
-         .WORD '~'
-         .WORD '~'
-         .WORD '~'             
-         .WORD '~'
-         .WORD '~'
-         .WORD '~'
-         .WORD '~'
-         .WORD '~'             
-         .WORD '~'
-         .WORD '~'
-         .WORD '~'
-         .WORD '~'             
-         .WORD '~'
-         .WORD '~'
-         .WORD '~'
-         .WORD '~'
-         .WORD '~'             
-         .WORD '~'
-
-;ln9:     .WORD 8'  ; #2d4a
-         .WORD '~'
-         .WORD '~'
-         .WORD '~'             
-         .WORD '~'
-         .WORD '~'
-         .WORD '~'
-         .WORD '~'
-         .WORD '~'             
-         .WORD '~'
-         .WORD '~'
-         .WORD '~'
-         .WORD '~'             
-         .WORD '~'
-         .WORD '~'
-         .WORD '~'
-         .WORD '~'
-         .WORD '~'             
-         .WORD '~'
-
-;ln10:    .WORD 9' ; #2d4a
-         .WORD '~'
-         .WORD '~'
-         .WORD '~'             
-         .WORD '~'
-         .WORD '~'
-         .WORD '~'
-         .WORD '~'
-         .WORD '~'             
-         .WORD '~'
-         .WORD '~'
-         .WORD '~'
-         .WORD '~'             
-         .WORD '~'
-         .WORD '~'
-         .WORD '~'
-         .WORD '~'
-         .WORD '~'             
-         .WORD '~'
 
 ix:      .BLOCK  2           ; #2d  reservé 2 octet à ix initialisé à 0 // rangee ou line
  
