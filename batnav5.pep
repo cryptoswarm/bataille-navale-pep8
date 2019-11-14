@@ -2,10 +2,9 @@
          CHARO '\n', i ; imprimer saut de ligne
          
          
-;Matrice 3 x 4 
+
          LDX     0,i
 
-;display
          LDX     ix,d        ;load dans X < ix >
          STX     ix,d        ;store dans < ix > la valeur de X
 
@@ -48,25 +47,47 @@ next_ix: CHARO   '\n',i
 ;-----------------------------------------------------------------
 
 msgDisp:         STRO askMsg, d 
-             
 
-                 CALL sizeBoat
+;Boucle1:         CPX  gap, d     ; while char == gap, on repete la lecture des chars 
+               ;  BREQ Boucle1
+               ;  BRGE erreur               ; qui decrivent les bateaux
+;erreur:         ; STRO askMsg, d             
+
+repeat:           CALL sizeBoat
                  STRO retMsgb, d
-                 ;CHARO carSize, d
+                 CHARO boatSize, d 
+                 
                  CHARO '\n', i
  
                  CALL dirBoat
                  STRO retMsgD, d
+                 CHARO boatdir, d 
                  CHARO '\n', i
 
                  CALL colBoat
                  STRO retMsgC, d
+                 CHARO boatCol, d 
                  CHARO '\n', i
                  
 
                  CALL rowBoat 
                  STRO retMsg, d
+                 CHARO nb, d
                  CHARO '\n', i
+
+                 CALL checkgap
+                 STRO retMsgG, d
+                 CHARO gap, d
+                 CHARO '\n', i
+                 
+                 ;CHARO gap, d
+                 ;CHARO \n', i
+                 ;CHARI gapp, d
+                 ;LDA 0,i
+                 ;LDBYTEA gap, d
+                 ;CPA  ', d
+                 ;BREQ repeat 
+                 ;BR msgDisp
 
 
 
@@ -87,10 +108,10 @@ fini:    stop
 
 ;Methode verifiant si la grandeur du bateau et correcte ou non 
 ;---------------------------------------------------------------
-sizeBoat:            CHARI	carSize, d
+sizeBoat:            CHARI	boatSize, d
                      ;CHARI carBidon, d
                      LDA 0,i
-                     LDBYTEA	carSize, d
+                     LDBYTEA	boatSize, d
                      
                      
                      CPA	'p', i
@@ -123,7 +144,7 @@ lettreP:              .BYTE 'p'
 lettreM:              .BYTE 'm'
 lettreG:              .BYTE 'g'
 ;chr:		.BLOCK 1
-carSize:		.BYTE 1
+boatSize:		.BYTE 1
 
 ; Is a letter message
 msgCarP:		.ASCII "le char entre est p\n\x00"
@@ -136,10 +157,10 @@ notAccep:	.ASCII "lettre ou char diffrent de ce qui est demandé\n\x00"
 
 ;---------------------------------------------------------------------------
 
-dirBoat:            CHARI	cardir, d
+dirBoat:            CHARI	boatdir, d
                      ;CHARI carBidon, d
                      LDA 0,i
-                     LDBYTEA	cardir, d
+                     LDBYTEA	boatdir, d
                      
                      
                      CPA	'v', i
@@ -168,23 +189,21 @@ lettreV:              .BYTE 'v'
 lettreH:              .BYTE 'h'
 
 ;chr:		.BLOCK 1
-cardir:		.BYTE 1 
+boatdir:		.BYTE 1 
 
 ; Is a letter message
 msgCarV:		.ASCII "le char entre est v\n\x00"
 msgCarH:              .ASCII "le char entre est h\n\x00"
 
 ; Is not a letter message
-dirNAcep:	.ASCII "lettre "  
-            CHARO cardir, d
-           .ASCII "ou char diffrent de ce qui est demandé\n\x00" 
+dirNAcep:	.ASCII "lettre ou char diffrent de ce qui est demandé\n\x00" 
 ;-----------------------------------------------------------------------------------
 ;--Methode vérifiant si la lettre designant la colonne  entré est correcte ou non --
 
 ;-----------------------------------------------------------------------------------
-colBoat:             CHARI	colChar, d
+colBoat:             CHARI	boatCol, d
                      LDA 0,i
-                     LDBYTEA	colChar, d
+                     LDBYTEA	boatCol, d
                      
                      
                      CPA	'A', i
@@ -214,7 +233,7 @@ lettreA:              .BYTE 'A'
 lettreZ:              .BYTE 'Q'
 
 ;chr:		.BLOCK 1
-colChar:		.BYTE 1 
+boatCol:		.BYTE 1 
 
 ; Is a letter message
 msgpeA:		.ASCII "le char entre est inferieur à A\n\x00"
@@ -230,34 +249,26 @@ notaLet:	.ASCII "lettre n'est pas entre A et Q \n\x00"
 ;------------------------------------------------------------
 
 rowBoat:              CHARI	nb, d
-                      ;CHARI carBidon, d
                       LDA 0,i
                       LDBYTEA	nb, d
-                      ;LDA	nb, d
-		;CPA	min, d
                       CPA	'1', i
 		BRLT	ltmin
-		;CPA	max, d 
+		
                       CPA	'9', i
 		BRLE	gtmax
 		STRO	outbmsg, d
                       RET0
-		;BR	out
+		
 ltmin:		STRO	ltmnmsg, d
                       RET0
-		;BR	out 
+		
 gtmax:		STRO	gtmxmsg, d
-;out:		STOP
                       RET0
 
 min:		.BYTE '0'
-;min:		.BYTE 0x01
-;min:		.WORD 31
 max:		.BYTE '9'
-;max:		.BYTE 0x09
-;max:		.WORD 39
 nb:		.BLOCK 2
-;nb:		.BYTE 0'
+
 
 ; In bounds message; msg va etre affiché si le nm de rangés est: 1<=nb=<9
 outbmsg:		.ASCII   "nombre de rangee est incorrecte\x00"
@@ -266,7 +277,35 @@ ltmnmsg:	            .ASCII  "plus petit que 1\x00"
 ; Higher than max message
 gtmxmsg:	            .ASCII  "nombre de rangee est petit ou egale 9 !\x00"
 carBidon: .BLOCK 1
+
+;------------------------------------------------------------
+;Methode verifiant si le char est un espace 
+;------------------------------------------------------------
+
+checkgap:             CHARI	gap, d
+                 
+                      LDA 0,i
+                      LDBYTEA	gap, d
+                     
+                      CPA	' ', i
+                      ;BREQ        boucle1 
+
+;boucle1:      	CALL       repeat, i           
+                      BREQ	isGap
+	           STRO	msgNotG, d 
+                      RET0
 		
+;isGap:		STRO	msgGap, d
+isGap:		CALL	repeat, i 
+                      RET0
+
+gap:		.BYTE 1
+
+
+; msg va etre affiché si le char est un espace
+msgGap:		.ASCII   "char est un ' ' \x00"
+;  msg va etre affiché si le char n'est un espace
+msgNotG:	            .ASCII  "char est different de ' ' \x00"		
 
 ;-------------------------------------------------------------------------
 ;------  Declaration, reservation espace memoire et  initialisation ------
@@ -506,6 +545,7 @@ jx:      .BLOCK  2           ; #2d; reservé 2 octet à jx initialisé à 0
 ;jx:      .BLOCK  1
 temp:    .block  2           ;reservé 2 octet à temp
 ;temp:    .block  1           ;reservé 2 octet à temp
+gapp:    .WORD ' '
 
 welMsg: .ASCII "Bienvenue au jeu de bataille navale! \n\x00"
 
@@ -517,6 +557,8 @@ retMsg: .ASCII "Je suis de retour\n\x00"
 retMsgb: .ASCII "Je suis de retour apres verif de grandeur boat\n\x00"
 retMsgD: .ASCII "Je suis de retour apres verif de l'orientation boat\n\x00"
 retMsgC: .ASCII "Je suis de retour apres verif de la colonne boat\n\x00"
+retMsgG: .ASCII "Je suis de retour apres verif du char ' ' \n\x00"
+
 
          
 
