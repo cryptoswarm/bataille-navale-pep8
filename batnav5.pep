@@ -83,11 +83,66 @@ repeat:           CALL sizeBoat
                  ;CHARO gap, d
                  ;CHARO \n', i
                  ;CHARI gapp, d
-                 ;LDA 0,i
-                 ;LDBYTEA gap, d
+                 ;
                  ;CPA  ', d
                  ;BREQ repeat 
                  ;BR msgDisp
+
+                 LDA 0,i
+                 LDBYTEA boatSize, d
+                 CPA   'g', i
+                 BREQ case1 
+                 CPA   'm', i
+                 BREQ case2 
+                 CPA   'p', i
+                 BREQ case3 
+
+ ; Si la taille de bateau est grande, on execute ce code
+
+case1:           LDA 0,i 
+                 LDBYTEA boatdir, d
+                 CPA   'h', i
+                 BREQ caseGH  ; cas grand et horizontal
+                 CPA   'v', i
+                 BREQ caseGV ; cas grand et Vertical
+
+; Si la taille de bateau est moyenne , on execute ce code
+
+case2:           LDA 0,i   
+                 LDBYTEA boatdir, d
+                 CPA   'h', i
+                 BREQ caseMH   ; cas moyenne et horizontal
+                 CPA   'v', i
+                 BREQ caseMV ; cas moyenne et vertical
+
+; Si la taille de bateau est petit, on execute ce code
+
+case3:           LDA 0,i             
+                 LDBYTEA boatdir, d
+                 CPA   'h', i  
+                 BREQ casePH    ; cas petit et horizontal
+                 CPA   'v', i
+                 BREQ casePV ; cas  petite et vertical
+
+; Si la taille de bateau est grande et la direction est Horizontale on execute ce code
+caseGH:
+
+
+; Si la taille de bateau est grande et la direction est Verticale on execute ce code
+caseGV:
+
+; Si la taille de bateau est moyenne et la direction est Horizontale on execute ce code
+caseMH:
+
+; Si la taille de bateau est moyenne et la direction est Verticale on execute ce code
+caseMV: 
+; Si la taille de bateau est petite et la direction est Horizontale on execute ce code
+casePH:
+
+; Si la taille de bateau est petite et la direction est Verticale on execute ce code
+casePV:
+                
+
 
 
 
@@ -287,10 +342,7 @@ checkgap:             CHARI	gap, d
                       LDA 0,i
                       LDBYTEA	gap, d
                      
-                      CPA	' ', i
-                      ;BREQ        boucle1 
-
-;boucle1:      	CALL       repeat, i           
+                      CPA	' ', i         
                       BREQ	isGap
 	           STRO	msgNotG, d 
                       RET0
@@ -337,7 +389,7 @@ jSize:   .equate 38       ;36 parceque la matrice contien 18 lignes
 
 ptr:     .BLOCK 2            
 
-ln1:     .WORD ' '
+ln1:     .WORD ' ' ; #2d4a
          .WORD 'A'
          .WORD 'B'
          .WORD 'C'            
@@ -358,7 +410,7 @@ ln1:     .WORD ' '
          .WORD 'R'
 
 
-ln2:     .WORD '1'
+ln2:     .WORD '1' ; #2d4a
          .WORD '~'
          .WORD '~'
          .WORD '~'             
@@ -379,7 +431,7 @@ ln2:     .WORD '1'
          .WORD '~'
          
 
-ln3:     .WORD '2'
+ln3:     .WORD '2' ; #2d4a
          .WORD '~'
          .WORD '~'
          .WORD '~'             
@@ -399,7 +451,7 @@ ln3:     .WORD '2'
          .WORD '~'             
          .WORD '~'
 
-ln4:     .WORD '3'
+ln4:     .WORD '3' ; #2d4a
          .WORD '~'
          .WORD '~'
          .WORD '~'             
@@ -419,7 +471,7 @@ ln4:     .WORD '3'
          .WORD '~'             
          .WORD '~'
 
-ln5:     .WORD '4'
+ln5:     .WORD '4' ; #2d4a
          .WORD '~'
          .WORD '~'
          .WORD '~'             
@@ -439,7 +491,7 @@ ln5:     .WORD '4'
          .WORD '~'             
          .WORD '~'
 
-ln6:     .WORD '5'
+ln6:     .WORD '5' ; #2d4a
          .WORD '~'
          .WORD '~'
          .WORD '~'             
@@ -459,7 +511,7 @@ ln6:     .WORD '5'
          .WORD '~'             
          .WORD '~'
 
-ln7:     .WORD '6'
+ln7:     .WORD '6' ; #2d4a
          .WORD '~'
          .WORD '~'
          .WORD '~'             
@@ -479,7 +531,7 @@ ln7:     .WORD '6'
          .WORD '~'             
          .WORD '~'
 
-ln8:     .WORD '7'
+ln8:     .WORD '7' ; #2d4a
          .WORD '~'
          .WORD '~'
          .WORD '~'             
@@ -499,7 +551,7 @@ ln8:     .WORD '7'
          .WORD '~'             
          .WORD '~'
 
-ln9:     .WORD '8'
+ln9:     .WORD '8'  ; #2d4a
          .WORD '~'
          .WORD '~'
          .WORD '~'             
@@ -519,7 +571,7 @@ ln9:     .WORD '8'
          .WORD '~'             
          .WORD '~'
 
-ln10:    .WORD '9'
+ln10:    .WORD '9' ; #2d4a
          .WORD '~'
          .WORD '~'
          .WORD '~'             
@@ -539,10 +591,10 @@ ln10:    .WORD '9'
          .WORD '~'             
          .WORD '~'
 
-ix:      .BLOCK  2           ; #2d ; reservé 2 octet à ix initialisé à 0
-;ix:      .BLOCK  1 
-jx:      .BLOCK  2           ; #2d; reservé 2 octet à jx initialisé à 0
-;jx:      .BLOCK  1
+ix:      .BLOCK  2           ; #2d  reservé 2 octet à ix initialisé à 0
+ 
+jx:      .BLOCK  2           ; #2d  reservé 2 octet à jx initialisé à 0
+
 temp:    .block  2           ;reservé 2 octet à temp
 ;temp:    .block  1           ;reservé 2 octet à temp
 gapp:    .WORD ' '
