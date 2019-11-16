@@ -2,9 +2,9 @@
          STRO welMsg, d; imprimer le msg de bienvenue 
          ;CHARO '\n', i ; imprimer saut de ligne
          
-         
+;JeuSpace:         
 
-         LDX     0,i
+          LDX     0,i
 
 in_loop: CPX     matrix,i 
          BRLE    display 
@@ -57,6 +57,7 @@ next_ix: CHARO   '|',i
          ADDA    1,i
          STA     range,d
          BR      iloop
+         ;RET0
 
 ;-----------------------------------------------------------------
 
@@ -115,6 +116,10 @@ repeat:          CALL sizeBoat
                  CPA   'p', i
                  BREQ case3 
 
+;----------------------------------------------------------------------------
+;-- les cases determinant quoi imprimer selon le choix du joueur ------------
+;----------------------------------------------------------------------------
+
  ; Si la taille de bateau est grande, on execute ce code
 
 case1:           LDA 0,i 
@@ -152,10 +157,20 @@ caseGH: LDA 0,i      ;CHARO G',i
         DECO    tempCol,d
 
         LDBYTEA     boatRow,d
-        CHARO   boatRow, d
+        CHARO   boatRow, d 
         SUBA        49,i
         STA     tempRow,d
         DECO    tempRow,d
+        CPA      ix, d
+        BREQ veriCol
+
+veriCol: CPA jx, d
+         BREQ load
+
+load:   LDA carHori, i
+        
+        ;Call JeuSpace
+        ;Call display
 
 ;carVert:      .EQUATE 0x0076   ; char v
 ;carHori:      .EQUATE 0x003E   ; char > 
@@ -177,18 +192,90 @@ casePH: CHARO 'P',i
 
 ; Si la taille de bateau est petite et la direction est Verticale on execute ce code
 casePV: CHARO 'P',i 
-                
+         CHARO '\n', i 
 
 
+;----------------------------------------------------------------------------
+;--Mettre a jour le tableau -------------------------------------------------
+;----------------------------------------------------------------------------
+
+LDX      0,i         
+         ;STRO welMsg, d; imprimer le msg de bienvenue 
+         ;CHARO '\n', i ; imprimer saut de ligne
+         
+;JeuSpace:         
+
+          LDX     0,i
+loopBoat: CPX     matrix,i 
+          BRLE    alphaP   ; alpha print imprimer lettres ABCDEFGHIJKLMNOPQR 
+
+         ;LDX     ix,d        ;load dans X < ix >
+         ;STX     ix,d        ;store dans < ix > la valeur de X
+
+alphaP:  STRO        ALPHA,d  ; les  lettres ABCDEFGHIJKLMNOPQR  à afficher
+         LDX         0,i
+         STX         ix,d 
 
 
+iBoat:   CPX     iSize,i
+         ;BRGE    fini        ; fini pour arreter le jeu
+         BRGE    MsgFeu      ; Si le nombre de ligne est atteint, et que tous les bateaux 
+                             ;sont affiche, on demande d'entrer les coups. 
+                             ;BRGE    suite ;for(line=0;line < 324; line += 36) {
+                             
+         LDX     0,i         ; Initilize jx to 0
+         STX     jx,d        ; jx <- 0 ;
+         
+         LDA     rantemp, d
+         DECO    rantemp,d
+  
+         CHARO  '|',i 
+
+ 
+
+         
+jBoat:   CPX     jSize,i
+         BRGE    then_ix
+         ADDX    ix,d
+
+;Here i should find a way to change tild to the right char. 
+
+;carVert:      .EQUATE 0x0076   ; char v
+;carHori:      .EQUATE 0x003E   ; char > 
+
+         ;CHARO   tild,i
+
+         CHARO   carHori, i
+
+         LDX     ix,d         
+         LDA     matrix,x    ; rA <- address of ln1,ln2 or ln3
+         STA     ptr,d
+         LDX     ptr,d
+         ADDX    jx,d
+
+         LDA     tild,i
+     
+         STA     0,x 
+         LDX     jx,d
+         ADDX    2,i 
+        
+         STX     jx,d 
+         BR      jBoat
+
+then_ix: CHARO   '|',i
+         CHARO   '\n',i
+         LDX     ix,d
+         ADDX    2,i
+         STX     ix,d
+         LDA     rantemp,d
+         ADDA    1,i
+         STA     rantemp,d
+         BR      iBoat
+         ;RET0
 
 
-
-
-
-
-
+                            
+           
 
 fini:    stop
 
@@ -543,26 +630,28 @@ tempRow:      .BLOCK 2
 ix:      .BLOCK  2           ; #2d  reservé 2 octet à ix initialisé à 0 // rangee ou line
  
 jx:      .BLOCK  2           ; #2d  reservé 2 octet à jx initialisé à 0  // colonne 
-range:   .WORD  1
+range:   .WORD  1            ; nbr de rangee a imprimer 
+rantemp:   .WORD  1  
 
 temp:    .block  2           ;reservé 2 octet à temp
 ;temp:    .block  1           ;reservé 2 octet à temp
 gapp:    .WORD ' '
 
-welMsg: .ASCII "Bienvenue au jeu de bataille navale! \n\x00"
+welMsg:  .ASCII "Bienvenue au jeu de bataille navale! \n\x00"
 
-askMsg: .ASCII "Entrer la description et la position des bateaux \n"
+askMsg:  .ASCII "Entrer la description et la position des bateaux \n"
          .ASCII "selon le format suivant, separes par des espaces: \n"
          .ASCII "taille[p/m/g] orientation[h/v] colonne[A-R] rangée[1-9] \n"
          .ASCII "ex: ghC4 mvM2 phK9 \n\x00" 
-retMsg: .ASCII "Je suis de retour\n\x00" 
+retMsg:  .ASCII "Je suis de retour\n\x00" 
 retMsgb: .ASCII "Je suis de retour apres verif de grandeur boat\n\x00"
 retMsgD: .ASCII "Je suis de retour apres verif de l'orientation boat\n\x00"
 retMsgC: .ASCII "Je suis de retour apres verif de la colonne boat\n\x00"
 retMsgG: .ASCII "Je suis de retour apres verif du char ' ' \n\x00"
 
-
-         
+MsgFeu: .ASCII "Feu à volonté!\n"
+        .ASCII "(entrer les coups à tirer: colonne [A-R] rangée [1-9])\n"
+        .ASCII "ex: A3 I5 M3 \n\x00"
 
 .end
 
