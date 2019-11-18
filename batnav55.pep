@@ -1,3 +1,6 @@
+;lDX 6, i
+;LDX matrix, x         
+
          LDX     0,i         
          STRO welMsg, d; imprimer le msg de bienvenue 
          ;CHARO '\n', i ; imprimer saut de ligne
@@ -19,7 +22,7 @@ display: STRO        ALPHA,d  ; afficher les lettres ABCDEFGHIJKLMNOPQR
 
 iloop:   CPX     iSize,i
          ;BRGE    fini        ; fini pour arreter le jeu
-         BRGE    msgDisp      ; Si le nombre de ligne est atteint
+         BRGE    msgBat      ; Si le nombre de ligne est atteint
          ;BRGE    suite ;for(line=0;line < 324; line += 36) {
                               ;on affiche le msg demandant d'entrer les bateaux 
          LDX     0,i         ; Initilize jx to 0
@@ -65,39 +68,40 @@ next_ix: CHARO   '|',i
 
 ;-----------------------------------------------------------------
 
-msgDisp:         STRO askMsg, d 
+msgBat:         STRO askMsg, d 
 
 ;Boucle1:         CPX  gap, d     ; while char == gap, on repete la lecture des chars 
                ;  BREQ Boucle1
                ;  BRGE erreur               ; qui decrivent les bateaux
-;erreur:         ; STRO askMsg, d             
+;erreur:         ; STRO askMsg, d  
 
-repeat:          CALL sizeBoat
-                 STRO retMsgb, d
-                 CHARO boatSize, d 
+           
+
+;repeat:          CALL sizeBoat
+                 ;STRO retMsgb, d
+                 ;CHARO boatSize, d 
                  
-                 CHARO '\n', i
+                 ;CHARO '\n', i
  
-                 CALL dirBoat
-                 STRO retMsgD, d
-                 CHARO boatdir, d 
-                 CHARO '\n', i
-
-                 CALL colBoat
-                 STRO retMsgC, d
-                 CHARO boatCol, d 
-                 CHARO '\n', i
+                 ;CALL dirBoat
+                 ;STRO retMsgD, d
+                 ;CHARO boatdir, d 
+                 ;CHARO '\n', i
+                 ;CALL colBoat
+                 ;STRO retMsgC, d
+                 ;CHARO boatCol, d 
+                 ;CHARO '\n', i
                  
 
-                 CALL rowBoat 
-                 STRO retMsg, d
-                 CHARO boatRow, d
-                 CHARO '\n', i
+                 ;CALL rowBoat 
+                 ;STRO retMsg, d
+                 ;CHARO boatRow, d
+                 ;CHARO '\n', i
 
-                 CALL checkgap
-                 STRO retMsgG, d
-                 CHARO gap, d
-                 CHARO '\n', i
+                 ;CALL checkgap
+                 ;STRO retMsgG, d
+                 ;CHARO gap, d
+                 ;CHARO '\n', i
                  
                  ;CHARO gap, d
                  ;CHARO \n', i
@@ -107,14 +111,150 @@ repeat:          CALL sizeBoat
                  ;BREQ repeat 
                  ;BR msgDisp
 
-                 LDA 0,i
-                 LDBYTEA boatSize, d
+                 ;LDA 0,i
+                 ;LDBYTEA boatSize, d
+                 ;CPA   'g', i
+                 ;BREQ case1 
+                 ;CPA   'm', i
+                 ;BREQ case2 
+                 ;CPA   'p', i
+                 ;BREQ case3 
+
+getBat:          CALL getsize
+                 CALL getOri 
+                 CALL getposC  ; colonne
+                 CALL getposR  ; rangee
+                 CALL isValid
+
+                 ; is valid laisse son bool de retour en A
+                 CPA 1,i 
+                 BREQ placerB ;Si valide on procede à placer les bateau dans l'espace de jeu
+                 ret0 
+
+;------------------------------------------------------------------------------------
+;-----------------------la grandeur  du bateau -------------------------------------
+;-------------------------------------------------------------------------------------
+
+getsize:         CHARI boatSize, d
+                 LDBYTEA boatSize, d 
                  CPA   'g', i
-                 BREQ case1 
+                 BREQ casSize1    ; cas ou le bateau est grand 
                  CPA   'm', i
-                 BREQ case2 
+                 BREQ casSize2   ; cas ou le bateau est moyen 
                  CPA   'p', i
-                 BREQ case3 
+                 BREQ casSize3  ; cas ou le bateau est petit
+                 
+                 BR    msgBat   ; brancher si le bateau ni grand, ni moyen ni petit.
+                  
+casSize1:        LDA   5,i
+                 BREQ finCasSz
+casSize2:        LDA   3,i
+                 BREQ finCasSz
+casSize3:        LDA   1,i
+fubCasSz:        STA   Size,d   ; la grandeur du bateau 
+                 RET0
+
+;-------------------------------------------------------------------------------------
+;---------------------------l'orientation du bateau ----------------------------------
+;-------------------------------------------------------------------------------------
+getOri:          CHARI orient,d
+                 LDBYTEA orient,d   ; orientation du bateau 
+                 CPA   'h', i
+                 BREQ finOrie  ; i have to create a case where dir is h 
+                 CPA   'v', i
+                 BREQ finOrien
+                 BR  msgBat  ;i have to create a case where dir is v
+finOrien:        RET0 
+
+;--------------------------------------------------------------------------------------
+;-----------------------------la position du bateau : colonne -------------------------
+;--------------------------------------------------------------------------------------
+getposC:        CHARI   boatCol,d
+                LDBYTEA boatCol,d
+                        
+                CPA	'A', i
+                    
+                BRLT	msgBat  ; Si inferieur à A : msg d'erreur 
+                     
+                CPA	'R', i
+                    
+                BRGT   msgBat  ; Si grand que R : msg d'erreur 
+
+
+                 SUBA  'A', i   ; Enlever 'A' du boatCol 
+                 ASLA           ; here i get my position at y
+                 STA   col, d   ; Colonne du bateau 
+                 RET0
+
+                 
+;--------------------------------------------------------------------------------------
+;-----------------------------la position du bateau :  rangee  ------------------------
+;--------------------------------------------------------------------------------------
+
+               
+getposR:         DECI boatRow, d       ; obtenir la rangee du bateau 
+                 
+                 LDA 0,i
+                 LDBYTEA  boatRow, d
+                 CPA	1, i     
+                 BRLT	msgBat  ; Si < 1 erreur 
+		
+                 CPA	9, i
+		 
+                 BRGT	msgBat  ; Si > 9 erreur 
+                 
+                 SUBA  1, i  ; on commence à  0 
+                 ; creer multiplication par nobre de colonne 
+
+                 ASLA    ; here i get my position at x
+                 STA   row, d   ; .WORD rang 0
+                 RET0
+
+
+;--------------------------------------------------------------------------------------
+;-----------------------------la position du bateau  rangee  --------------------------
+;--------------------------------------------------------------------------------------
+
+         
+isValid:         LDA  ;ERROR: Operand specifier expected after mnemonic.
+                 CPA ; Verifier si le bateaux 
+                 
+
+;--------------------------------------------------------------------------------------
+;-----------------------------mettre a jour le tableau   ------------------------------
+;--------------------------------------------------------------------------------------
+
+
+placerB:         LDX pos,d  ; (pos 'col' - 'A' + long*(rang-1))*2
+                 LDA orient,d 
+                 CPA 'h',i
+                 BRNE placerVB   ; Si different de h donc c'est vertical 
+loopPlac:        LDA '>',i
+                 STA matrice,x
+                 ADDX 2,i
+                 LDA size,d
+                 SUBA 1,i
+                 CPA 0,i
+                 BREQ finlpPl
+                 BR loopPlac
+
+
+
+placerVB:        LDA 'v',i      ; cas vertical 
+                 STA matrice,x  ; have to store it somewhere else.
+                 ADDX 2,i
+                 LDA size,d
+                 SUBA 1,i
+                 CPA 0,i
+                 BREQ finlpPl
+                 BR loopPlac
+
+finlpPl:         RET0
+
+                 
+
+                 
+
 
 ;----------------------------------------------------------------------------
 ;-- les cases determinant quoi imprimer selon le choix du joueur ------------
@@ -365,7 +505,7 @@ sizer1:            .BLOCK 8 ; #2d4a
 
 ;---------------------------------------------------------------------------
 
-dirBoat:            CHARI	boatdir, d
+dirBoat:             CHARI	boatdir, d
                      ;CHARI carBidon, d
                      LDA 0,i
                      LDBYTEA	boatdir, d
@@ -618,6 +758,11 @@ carHori:      .EQUATE 0x003E   ; char >
 emptyO:       .EQUATE 0x006F   ; char o , si aucune partie de boat n'est toucheé
 tempCol:      .BLOCK 2
 tempRow:      .BLOCK 2
+
+col:       .WORD 0  ; la colonne du bateau 
+row:       .WORD 0  ; la rangee du bateau 
+orient:    .BYTE 1  ; l'orientation du bateau 
+Size:	.BYTE 1  ; la grandeur du bateau 
 
                 
                    
