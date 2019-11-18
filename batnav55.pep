@@ -124,11 +124,12 @@ getBat:          CALL getsize
                  CALL getOri 
                  CALL getposC  ; colonne
                  CALL getposR  ; rangee
-                 CALL isValid
+                 ;CALL isValid 
 
                  ; is valid laisse son bool de retour en A
-                 CPA 1,i 
-                 BREQ placerB ;Si valide on procede à placer les bateau dans l'espace de jeu
+                 ;CPA  1,i 
+                 ;BREQ placerB ;Si valide on procede à placer les bateau dans l'espace de jeu
+                 CALL placerB
                  ret0 
 
 ;------------------------------------------------------------------------------------
@@ -147,11 +148,13 @@ getsize:         CHARI boatSize, d
                  BR    msgBat   ; brancher si le bateau ni grand, ni moyen ni petit.
                   
 casSize1:        LDA   5,i
-                 BREQ finCasSz
+                 CPA   5,i
+                 BREQ finCasSz 
 casSize2:        LDA   3,i
+                 CPA   3,i
                  BREQ finCasSz
 casSize3:        LDA   1,i
-fubCasSz:        STA   Size,d   ; la grandeur du bateau 
+finCasSz:        STA   size,d   ; la grandeur du bateau 
                  RET0
 
 ;-------------------------------------------------------------------------------------
@@ -159,12 +162,13 @@ fubCasSz:        STA   Size,d   ; la grandeur du bateau
 ;-------------------------------------------------------------------------------------
 getOri:          CHARI orient,d
                  LDBYTEA orient,d   ; orientation du bateau 
+                 STA dir, d   ; direction du bateau 
                  CPA   'h', i
-                 BREQ finOrie  ; i have to create a case where dir is h 
+                 BREQ finOrien  ; retour a la methode 
                  CPA   'v', i
-                 BREQ finOrien
-                 BR  msgBat  ;i have to create a case where dir is v
-finOrien:        RET0 
+                 BREQ finOrien ; si char = 'v' 
+                 BR  msgBat  ;  si char != 'v' ou 'h'
+finOrien:        RET0 ; retour a la methode
 
 ;--------------------------------------------------------------------------------------
 ;-----------------------------la position du bateau : colonne -------------------------
@@ -183,7 +187,9 @@ getposC:        CHARI   boatCol,d
 
                  SUBA  'A', i   ; Enlever 'A' du boatCol 
                  ASLA           ; here i get my position at y
-                 STA   col, d   ; Colonne du bateau 
+                 STA   col, d   ; Colonne du bateau  col = boatCol -'A'
+                 CHARO col, d
+                 DECO col, d
                  RET0
 
                  
@@ -192,22 +198,49 @@ getposC:        CHARI   boatCol,d
 ;--------------------------------------------------------------------------------------
 
                
-getposR:         DECI boatRow, d       ; obtenir la rangee du bateau 
+getposR:         CHARI boatRow, d ;DECI boatRow, d ;CHARI boatRow, d  ;DECI boatRow, d       ; obtenir la rangee du bateau 
                  
                  LDA 0,i
                  LDBYTEA  boatRow, d
-                 CPA	1, i     
+                 ;CPA	1, i 
+                 CPA	49, i     
                  BRLT	msgBat  ; Si < 1 erreur 
 		
-                 CPA	9, i
+                 ;CPA	9, i
+                 CPA	57, i
 		 
                  BRGT	msgBat  ; Si > 9 erreur 
-                 
-                 SUBA  1, i  ; on commence à  0 
-                 ; creer multiplication par nobre de colonne 
+                 SUBA 48,i
+                 STA rowtemp, d
+                 SUBA  1, i  ; on commence à  0
+                 STA   row, d  ; Store res dans variable row
+                 ;lDA col, i; creer multiplication par nobre de colonne
+                 ;pos 'col' - 'A' + long*(rang-1))*2
 
-                 ASLA    ; here i get my position at x
-                 STA   row, d   ; .WORD rang 0
+                 LDX  jSize,i ;or d          ;LDX nb2,d ; X = nb2  nb de colonne
+                 BRGE commence ; if(nb2 < 0){
+                 LDA row,d ; maybe it is iSize,d
+                 NEGA ;
+                 STA row,d ; A = nb1 = -nb1;
+                 LDX jSize,i ;  or d
+                 NEGX ; X = nb2 = -nb2;
+                 STX jSize,d ; } 
+commence:        LDA 0,i ; A = 0;
+addition:        ADDA row,d ; do{ A += nb1;
+                 SUBX 1,i ; X--;
+                 BRNE addition ; } while(X != 0);
+                 ;ASLA 
+fini:            STA res1,d ; res1 = A;
+                 DECO res1,d ; cout << res; 
+                ; STOP ;
+;nb1: .WORD 0
+;nb2: .WORD 0
+;res: .WORD 0
+;.END 
+                  
+
+                 ;ASLA    ; here i get my position at x
+                 ;STA   row, d   ; .WORD rang 0
                  RET0
 
 
@@ -216,23 +249,31 @@ getposR:         DECI boatRow, d       ; obtenir la rangee du bateau
 ;--------------------------------------------------------------------------------------
 
          
-isValid:         LDA  ;ERROR: Operand specifier expected after mnemonic.
-                 CPA ; Verifier si le bateaux 
-                 
+;isValid:         LDA  
+                ; CPA ; Verifier si la  position des bateaux est a l'interieur de la matrix 
+                ; RET0
 
 ;--------------------------------------------------------------------------------------
 ;-----------------------------mettre a jour le tableau   ------------------------------
 ;--------------------------------------------------------------------------------------
 
 
-placerB:         LDX pos,d  ; (pos 'col' - 'A' + long*(rang-1))*2
-                 LDA orient,d 
+placerB:         LDA res1, d; LDX pos,d  ; (pos 'col' - 'A' + long*(rang-1))*2 
+                 ;ASLA       ; (pos col + long*(row))
+                 ; res1 = nbColonne*(rang-1)
+                 
+                 ADDA col, d ; or i   col = col - 'A'
+                 ASLA
+                 STA res2, d
+                 LDX res2, d
+                 ;LDA orient,d  ; maybe it is d
+                 LDA dir,d
                  CPA 'h',i
                  BRNE placerVB   ; Si different de h donc c'est vertical 
 loopPlac:        LDA '>',i
-                 STA matrice,x
+                 STA matrix,x 
                  ADDX 2,i
-                 LDA size,d
+                 LDA size,d 
                  SUBA 1,i
                  CPA 0,i
                  BREQ finlpPl
@@ -241,7 +282,7 @@ loopPlac:        LDA '>',i
 
 
 placerVB:        LDA 'v',i      ; cas vertical 
-                 STA matrice,x  ; have to store it somewhere else.
+                 STA matrix,x  ; have to store it somewhere else. 
                  ADDX 2,i
                  LDA size,d
                  SUBA 1,i
@@ -249,7 +290,7 @@ placerVB:        LDA 'v',i      ; cas vertical
                  BREQ finlpPl
                  BR loopPlac
 
-finlpPl:         RET0
+finlpPl:         RET0  ; fin de loop placer bateau
 
                  
 
@@ -417,7 +458,7 @@ then_ix: CHARO   '|',i
                             
            
 
-fini:    stop
+;fini:    stop 
 
 
 
@@ -426,35 +467,35 @@ fini:    stop
 
 ;Methode verifiant si la grandeur du bateau et correcte ou non 
 ;---------------------------------------------------------------
-sizeBoat:            CHARI	boatSize, d
+;sizeBoat:            CHARI	boatSize, d
                      ;CHARI carBidon, d
-                     LDA 0,i
-                     LDBYTEA	boatSize, d
+                     ;LDA 0,i
+                    ; LDBYTEA	boatSize, d
                      
                      
-                     CPA	'p', i
+                    ; CPA	'p', i
                      ;CPA	lettreP, d
                      ;BREQ	eqCharP
-                     BREQ        loadBoat
+                     ;BREQ        loadBoat
  
                              
                      ;if p, convert to 1 bit 
                      ;RET0
-                     CPA	'm', i
+                     ;CPA	'm', i
                      ;CPA	lettreM, d
                      ;BREQ	eqCharm 
-                     BREQ        loadBoat
+                     ;BREQ        loadBoat
                      ;if p, convert to 3 bit 
                      ;RET0
-                     CPA	'g', i
+                    ; CPA	'g', i
                      ;CPA	lettreG, d   
                      ;BREQ	eqCharg
-                     BREQ        loadBoat
+                    ; BREQ        loadBoat
                     ;if p, convert to 5 bit 
                      ;RET0
-                     CALL         msgDisp, i
+                   ;  CALL         msgDisp, i 
                      ;STRO        notAccep, d
-                     RET0
+                    ; RET0
                      
 ;notlet:		STRO	nletmsg, d 
 		;BR	out 
@@ -694,12 +735,12 @@ checkgap:             CHARI	gap, d
                       LDBYTEA	gap, d
                      
                       CPA	' ', i         
-                      BREQ	isGap
+                      ;BREQ	isGap 
 	           STRO	msgNotG, d 
                       RET0
 		
 ;isGap:		STRO	msgGap, d
-isGap:		CALL	repeat, i 
+;isGap:		CALL	repeat, i 
                       RET0
 
 gap:		.BYTE 1
@@ -735,7 +776,9 @@ matrix:  .ADDRSS ln1         ; #2h
 totSize: .equate 48       ;CHANGER avant equate 24 pour 3x4 | critere pour taille de matrice (x2)
 
 iSize:   .equate 18       ;18 parceque la matrice contien 9 lignes
-jSize:   .equate 36       ;36 parceque la matrice contien 18 lignes
+jSize:   .equate 36       ;36 parceque la matrice contien 18 Colonne
+res1:    .BLOCK 2
+res2:    .BLOCK 2
 
 
 ptr:     .BLOCK 2 
@@ -758,11 +801,13 @@ carHori:      .EQUATE 0x003E   ; char >
 emptyO:       .EQUATE 0x006F   ; char o , si aucune partie de boat n'est toucheé
 tempCol:      .BLOCK 2
 tempRow:      .BLOCK 2
+rowtemp: .BLOCK 2
 
 col:       .WORD 0  ; la colonne du bateau 
+dir:       .WORD 0  ; direction du bateau 
 row:       .WORD 0  ; la rangee du bateau 
 orient:    .BYTE 1  ; l'orientation du bateau 
-Size:	.BYTE 1  ; la grandeur du bateau 
+size:	.BYTE 1  ; la grandeur du bateau 
 
                 
                    
