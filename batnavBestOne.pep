@@ -305,28 +305,55 @@ isValid:         LDA size, d
                  BREQ sizeg
                  CPA 3,i
                  BREQ sizem
-
+ ;-------------------------------------
+ ;----SIZE grand-----------------------
+ ;-------------------------------------
                  
 sizeg:           lDA dir,d
                  CPA 'h', i
+             
                  BREQ batgh
+                 CPA 'v', i
+                 BREQ batgv  ; bateau grand vertical 
 batgh:           lDA col, d
                  CPA 13, i
-                 BRGT noplaceg ;checkgap placeB
+                 BRGT noplacg ; go to the next and chexk if it is a gap via checkgap method
                  CALL placerB
 
-noplaceg:        CALL checkgap 
+noplacg:         CALL checkgap
+
+batgv:           lDA row, d
+                 CPA 4, i
+                 BRGT noplcgv ;ne pas placer bateau grand vertical a la rangee 7 
+                 CALL placerB
+noplcgv:         CALL checkgap
+
+ ;-------------------------------------
+ ;----SIZE medium ---------------------
+ ;-------------------------------------
+
 
 sizem:           lDA dir,d
                  CPA 'h', i
                  BREQ batmh
+                 CPA 'v', i
+                 BREQ batmv
 
-batmh:           lDA col, d
+batmh:           lDA col, d      ; bateau moyeb horizontal
                  CPA 15, i
-                 BRGT noplacem ;checkgap placeB
+                 BRGT noplacem   ;checkgap placeB
                  CALL placerB
-                 CALL placerB
+                 
 noplacem:        CALL checkgap
+
+
+
+
+batmv:           lDA row, d    ; bateau moyeb Vertical
+                 CPA 7, i
+                 BRGT noplcmv ;ne pas placer bateau moyen  vertical a la rangee 7 
+                 CALL placerB
+noplcmv:         CALL checkgap 
  
                 ; CPA ; Verifier si la  position des bateaux est a l'interieur de la matrix 
                 ; RET0
