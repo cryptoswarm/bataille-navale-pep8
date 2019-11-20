@@ -9,33 +9,23 @@
          CALL    msgBat
          CALL    display2
 
-;JeuSpace:         
 
-
-         ;LDX     0,i
-
-;in_loop: CPX     matrix,i 
- ;        BRLE    display 
-
-         ;LDX     ix,d        ;load dans X < ix >
-         ;STX     ix,d        ;store dans < ix > la valeur de X
-;-----------------------------------------------------------------
-;
-; Methode pour print l'espace du jeu
-;
-;-----------------------------------------------------------------
+;---------------------------------------------------------------------
+;                                                                   --
+; Methode pour print l'espace du jeu   initialemt remplis avec '~'  --
+;                                                                   --
+;---------------------------------------------------------------------
 display: STRO        ALPHA,d  ; afficher les lettres ABCDEFGHIJKLMNOPQR
          LDX         0,i
          STX         ix,d 
 
 
 iloop:   CPX     iSize,i
-         ;BRGE    fini        ; fini pour arreter le jeu
-         BRGE    findisp      ; Si le nombre de ligne est atteint
-         ;BRGE    suite ;for(line=0;line < 324; line += 36) {
-                              ;on affiche le msg demandant d'entrer les bateaux 
-         LDX     0,i         ; Initilize jx to 0
-         STX     jx,d        ; jx <- 0 ;
+         
+         BRGE    findisp      ; 
+         
+         LDX     0,i         ; 
+         STX     jx,d        ; 
          DECO    range,d
          CHARO  '|',i 
 
@@ -71,10 +61,17 @@ next_ix: CHARO   '|',i
          BR      iloop
 findisp: RET0
 
+;---------------------------------------------------------------------------
+;                                                                         --
+; Methode pour print l'espace du jeu  y compris les chars '>' ou 'v' qui  --
+; representent la description des bateau sinon il est remplis avec '~'     --
+;                                                                          --
+;----------------------------------------------------------------------------
 
 
 
-display2: CHARO '\n', i
+
+display2:CHARO '\n', i
          STRO        ALPHA,d  ; afficher les lettres ABCDEFGHIJKLMNOPQR
          LDX         0,i
          STX         ix,d 
@@ -83,12 +80,13 @@ display2: CHARO '\n', i
 
 
 iloop2:   CPX     iSize,i
-         ;BRGE    fini        ; fini pour arreter le jeu
-         BRGE    FeuMsg ;findisp2      ; Si le nombre de ligne est atteint 
-         ;BRGE    suite ;for(line=0;line < 324; line += 36) {
-                              ;on affiche le msg demandant d'entrer les bateaux 
-         LDX     0,i         ; Initilize jx to 0
-         STX     jx,d        ; jx <- 0 ;
+         
+         BRGE    FeuMsg ; Si on a terminé l'affiuchage du tableau avec les bateaux dedans
+                        ; on demande à  l'utilisateur d'entrer les coups. 
+         
+                              
+         LDX     0,i         
+         STX     jx,d        
          DECO    range,d
          CHARO  '|',i 
           
@@ -96,7 +94,7 @@ jloop2:   CPX     jSize,i
          BRGE    next_ix2
          ADDX    ix,d
          LDX     ix,d         
-         LDA     matrix,x    ; rA <- address of ln1,ln2 or ln3
+         LDA     matrix,x    ; 
 
          ADDA    jx,d        
          ADDA    1,i
@@ -119,8 +117,66 @@ next_ix2: CHARO   '|',i
          ADDA    1,i
          STA     range,d
          BR      iloop2
-;findisp2: RET0
+
 FeuMsg: CALL feuStart
+
+;-------------------------------------------------------------------------------
+;                                                                             --
+; Methode pour print l'espace du jeu  y compris les chars '>' ou 'v' qui      --
+; representent la description des bateau sinon il est remplis avec '~'        --
+; et des 'o' dans le cas ou le coup tempe dans une position autre que '>'     --
+; ou 'v' sinon le char '*' reprend la place des parties touchees des bateaux  --
+;                                                                             --
+;---------------------------------------------------------------------------- --      
+
+display3:CHARO '\n', i
+         STRO        ALPHA,d  ; afficher les lettres ABCDEFGHIJKLMNOPQR
+         LDX         0,i
+         STX         ix,d 
+         LDA     1,i
+         STA     range,d
+
+
+iloop3:   CPX    iSize,i 
+         
+         BRGE    MsgKil ; Si on a terminé l'affiuchage du tableau avec les bateaux dedans
+                        ; on demande à  l'utilisateur d'entrer les coups. 
+         
+                              
+         LDX     0,i         
+         STX     jx,d        
+         DECO    range,d
+         CHARO  '|',i 
+          
+jloop3:   CPX    jSize,i
+         BRGE    next_ix3
+         ADDX    ix,d
+         LDX     ix,d         
+         LDA     matrix,x    ; 
+
+         ADDA    jx,d        
+         ADDA    1,i
+         STA     ptr,d
+         CHARO   ptr,n
+         ;LDX     ptr,d
+
+         ADDX    jx,d
+         LDX     jx,d
+         ADDX    2,i         
+         STX     jx,d 
+         BR      jloop3
+
+next_ix3: CHARO   '|',i 
+         CHARO   '\n',i
+         LDX     ix,d
+         ADDX    2,i
+         STX     ix,d
+         LDA     range,d
+         ADDA    1,i
+         STA     range,d
+         BR      iloop3
+
+MsgKil:  CALL KillEnd 
 
 
 
@@ -147,17 +203,14 @@ getBat:          CALL getsize
                  CALL getOri 
                  CALL getposC  ; colonne
                  CALL getposR  ; rangee
-                 CALL isValid 
+                 CALL isValid  ; Verifie si le bateau entre dans l'espace de jeu
 
                  ; is valid laisse son bool de retour en A
                  ;CPA  1,i 
                  ;BREQ placerB ;Si valide on procede ? placer les bateau dans l'espace de jeu
                  CALL placerB
-                 CALL checkgap
-                 ;CHARI gap, d
-                 ;CPX  ' ', i
-                 ;BREQ getBat
-                 ;CALL display;printBat 
+                 CALL checkgap 
+                
                  ret0 
 
 ;------------------------------------------------------------------------------------
@@ -183,6 +236,8 @@ casSize2:        LDA   3,i
                  BREQ finCasSz
 casSize3:        LDA   1,i
 finCasSz:        STA   size,d   ; la grandeur du bateau 
+                 STA sizeT,d 
+                 DECO sizeT, d  
                  RET0
 
 ;-------------------------------------------------------------------------------------
@@ -201,7 +256,7 @@ finOrien:        RET0 ; retour a la methode
 ;--------------------------------------------------------------------------------------
 ;-----------------------------la position du bateau : colonne -------------------------
 ;--------------------------------------------------------------------------------------
-getposC:        CHARI   boatCol,d 
+getposC:        CHARI   boatCol,d   ; obteni la colonne du bateau 
                 LDBYTEA boatCol,d
                         
                 CPA	'A', i
@@ -265,12 +320,7 @@ getposR:         CHARI boatRow, d ;DECI boatRow, d ;CHARI boatRow, d  ;DECI boat
                  STA row,d ; A = nb1 = -nb1;
                  
                  
-                 ;LDX nbCol,i
-                 ;LDX nbRow,i
-                 ;NEGX ; X = nb2 = -nb2;
-               
-                 ;STX nbCol,d 
-                 ;LDX nbRow,d
+              
 
 commence:        LDA 0,i ; A = 0;
 addition:        ADDA row,d ; do{ A += nb1; ADDA rowtemp, d ; ADDA col, d ;
@@ -282,16 +332,18 @@ fini:            STA res1,d ; res1 = A;
                  ADDA res1,d
                  ASLA
                  STA pos,d
+                 STA postem, d ; position de bateau 
+                 
                  CHARO 'z',i
-                 DECO pos,d
+                 DECO pos,d     ; position du bateau bateau[rangee][colonne] = pos
                  CHARO '\n', i 
                 ; STRO "nbColone*row = \x00", i 
-                 DECO res1,d ; cout << res; 
+                 DECO res1,d ; cout << res;
+                 DECO postem, d 
 
                   
 
-                 ;ASLA    ; here i get my position at x
-                 ;STA   row, d   ; .WORD rang 0
+                
                  RET0
 
 
@@ -305,9 +357,9 @@ isValid:         LDA size, d
                  BREQ sizeg
                  CPA 3,i
                  BREQ sizem
- ;-------------------------------------
- ;----SIZE grand-----------------------
- ;-------------------------------------
+                 ;-------------------------------------
+                 ;----       SIZE grand       ---------
+                 ;-------------------------------------
                  
 sizeg:           lDA dir,d
                  CPA 'h', i
@@ -328,9 +380,9 @@ batgv:           lDA row, d
                  CALL placerB
 noplcgv:         CALL checkgap
 
- ;-------------------------------------
- ;----SIZE medium ---------------------
- ;-------------------------------------
+                 ;-------------------------------------
+                 ;----       SIZE medium     ----------
+                 ;-------------------------------------
 
 
 sizem:           lDA dir,d
@@ -353,7 +405,7 @@ batmv:           lDA row, d    ; bateau moyeb Vertical
                  CPA 7, i
                  BRGT noplcmv ;ne pas placer bateau moyen  vertical a la rangee 7 
                  CALL placerB
-noplcmv:         CALL checkgap 
+noplcmv:         CALL checkgap ; 
  
                 ; CPA ; Verifier si la  position des bateaux est a l'interieur de la matrix 
                 ; RET0
@@ -371,20 +423,15 @@ checkgap:             CHARI	gap, d
                       CPA	' ', i         
                       BREQ	isGap 
 	         ; if it is diffrent than a ' ' go to print bateau method	
-                      CALL  display2;printBat 
+                      CALL  display2    ;printBat 
                       ;RET0
 		
-isGap:		CALL	getBat
-;isGap:		CALL	repeat, i 
+isGap:		CALL	getBat  ; Ex: ghC4 si apres on trouve espace on passe a 
+                                          ; la lecture de 2eme bateau sinon 
+                                          ; on affiche le bateau dans le cas ou il est valide
+
                       RET0
 
-
-
-
-; msg va etre affichÈ si le char est un espace
-;msgGap:		.ASCII   "char est un ' ' \x00"
-;  msg va etre affichÈ si le char n'est un espace
-;msgNotG:	            .ASCII  "char est different de ' ' \x00"		
 
 
 ;--------------------------------------------------------------------------------------
@@ -396,6 +443,10 @@ isGap:		CALL	getBat
 placerB:         LDX matrix,d   ;ldx matrix,i
                  ADDX pos,d
                  STX pos,d
+               ;--------------
+                 ;deco pos,i
+                 
+               ;--------------
                  ;LDX pos,d    ; position du bateau xy = (pos 'col' - 'A' + long*(rang-1))*2 
                  ;LDA orient,d  ; maybe it is d
                  LDA dir,d
@@ -455,18 +506,23 @@ loopPlcV:        CPA 0,i
 
 finlpPl:         RET0  ; fin de loop placer bateau
 
+           ;-----------------------------------------------------------
+           ;-------   A partir de cet endroit                    ------
+           ;-------   le traitement des coups entres  commence   ------            
+           ;-------   les coups a entrer              -----------------
+           ;-----------------------------------------------------------
+
+                 
+
                  
 
                  
 
 
 ;----------------------------------------------------------------------------
-;------------------ les cous a entrer  ---------------------------------------
+;------------------ les coups a entrer  ------------------------------------ 
 ;----------------------------------------------------------------------------
-;printBat:LDA 0, i
-;         LDBYTEA ln2[15], i 
-;         STBYTEA var, d
-;         CHARO var, d
+
 
             
 feuStart:   STRO  MsgFeu, d
@@ -475,6 +531,9 @@ feuStart:   STRO  MsgFeu, d
 fireSet:    CALL getColF
             CALL getRowF
             CALL feugap
+            ;ValdFeu   ; faut valider les coups
+            CALL destroy 
+            CALL display3
 
 ;--------------------------------------------------------------------------------------
 ;-----------------------------la position du feu : colonne -------------------------
@@ -492,7 +551,7 @@ getColF:        CHARI   FeuColt,d
 
 
                  SUBA  'A', i   ; Enlever 'A' du boatCol 
-                 ASLA           ; here i get my position at y
+                ; ASLA           ; here i get my position at y
                  STA   colFeu, d   ; Colonne du bateau  col = boatCol -'A'
                  CHARO colFeu, d
                  DECO  colFeu, d
@@ -505,7 +564,7 @@ getColF:        CHARI   FeuColt,d
                
 getRowF:         CHARI FeuRowt, d ;DECI boatRow, d ;CHARI boatRow, d  ;DECI boatRow, d       ; obtenir la rangee du bateau 
                  
-                 LDA 0,i
+                 ;LDA 0,i
                  LDBYTEA  FeuRowt, d
                  ;CPA	1, i 
                  CPA	49, i     
@@ -516,29 +575,57 @@ getRowF:         CHARI FeuRowt, d ;DECI boatRow, d ;CHARI boatRow, d  ;DECI boat
 		 
                  BRGT	feuStart  ; Si > 9 erreur 
                  ;SUBA 48,i
-                 SUBA 49,i
+                 SUBA 48,i
                  STA rowFeu, d 
 
 
                  ;SUBA  1, i  ; on commence ?  0
-                 ADDA  1, i
+                 SUBA  1, i
                  ;ASLA
                  STA   rowFeu, d  ; Store res dans variable row
                  
                  CHARO '\n', i
                  LDA  rowFeu, d
                  DECO rowFeu, d
-               
-                 
-                ; LDX nbCol, i ; number of colom  =18 ;LDX  18,i  ;
-                 
-                ; BRGE commence ; if(nb2 < 0){
 
-                 ;LDA row,d ; maybe it is iSize,d
+
+;-------------------------------------------------------------------------------------
+;-------------------Trouver la position du feu dans le tableau   ----------------------
+;-------------------en se basant sur la rangee du feu et la colonne du feu -------------
+;-------------------------------------------------------------------------------------
+
+                 LDX nbCol, i ; number of colom  =18 ;LDX  18,i  ;
+                 
+                 BRGE start ; if(nb2 < 0){
+
+                 LDA row,d ; maybe it is iSize,d
                  
                  ;LDA rowtemp,d
-                ; NEGA ;
-                ; STA rowFeu,d ; A = nb1 = -nb1;
+                 NEGA ;
+                 STA row,d ; A = nb1 = -nb1;
+                 
+
+start:           LDA 0,i ; A = 0; 
+add:             ADDA rowFeu,d ; do{ A += nb1; ADDA rowtemp, d ; ADDA col, d ; 
+                 SUBX 1,i ; X--;
+                 BRNE add ; } while(X != 0);
+                 ;ASLA 
+end:             STA ress1,d ; res1 = A; 
+                 LDA colFeu,d
+                 ADDA ress1,d
+                 ASLA
+                 STA posFeu,d  ; position de feu 
+                 CHARO 'z',i
+                 DECO posFeu,d  ; position de feu
+                 CHARO '\n', i 
+              
+                 DECO ress1,d ; cout << res; 
+
+                 RET0
+
+                 
+
+
 
 ;---------------------------------------------------------------------------------------
 ;----------------Methode verifiant si le char est un espace -----------------------------
@@ -552,51 +639,123 @@ feugap:               CHARI	gapFeu, d
                       CPA	' ', i         
                       BREQ	isGapF 
 	         ; if it is diffrent than a ' ' go to print bateau method	
-                      CALL  display2;printBat 
+                      CALL  destroy;printBat 
                       ;RET0
 		
-isGapF:		CALL 	fireSet ;CALL 	fireSet 
+isGapF:		CALL 	fireSet ;CALL fireSet 
 ;isGap:		CALL	repeat, i 
                       RET0
 
 
-
-
-; msg va etre affichÈ si le char est un espace
-;msgGap:		.ASCII   "char est un ' ' \x00"
-;  msg va etre affichÈ si le char n'est un espace
-;msgNotG:	            .ASCII  "char est different de ' ' \x00"		
-
-
 ;--------------------------------------------------------------------------------------
-;-----------------------------mettre a jour le tableau   ------------------------------
+;----------------------------- destroy les bateau   -----------------------------------
 ;--------------------------------------------------------------------------------------
 
-STOP
+destroy:         LDA   postem,d
+                 
+                 CPA   posFeu, d
+                 BREQ  change
                  
                  
-                 ;LDX nbCol,i
-                 ;LDX nbRow,i
-                 ;NEGX ; X = nb2 = -nb2;
+
+
+                 ;RET0
+
+                 
+
+
+
+change:          LDX matrix,d
+                 ADDX postem, d ;ADDX posFeu,d    ; ADDX pos, d  position bateau 
+                 STX postem, d ;STX  posFeu,d    ; STX pos, d position de bateau 
+              
+                 LDA dir,d
+                 CPA 'h',i
+                 BRNE placerVB   ; Si different de h donc c'est vertical 
+                 
+
+
+                 
+                 LDA sizeT,d 
+                 STA sizeT,d 
+lopPlac:         CPA 0,i ;trying to print coups
+                 BREQ endlpPl
+                 
+                 LDA postem, s
+                 ;CPA posFeu , i
+                 ;BREQ printS 
+
+                 LDA '*',i     ; print start 
+                   
+                 ;LDA '>',i
+                 ;LDA 
+                 
+                 ;STA matrix,x 
+                 STA postem,n
+                 ADDX 2,i
+                 STX postem,d
+                 ;ADDX 1,i
+                 LDA sizeT,d 
+               ; STA sizetem, d 
+                 SUBA 1,i
+                 STA sizeT,d 
+                 BR lopPlac
+
+
+
+
+
+
+placeVB:         LDA sizeT,d     ; cas ou le bateau est vertical 
+                 STA sizeT,d
+
+                 
+                 ;STA matrix,x 
+                 ;ADDX 18, i
                
-                 ;STX nbCol,d 
-                 ;LDX nbRow,d
+                 
+                 
+                 
 
-;commence:        LDA 0,i ; A = 0; 
-;addition:        ADDA row,d ; do{ A += nb1; ADDA rowtemp, d ; ADDA col, d ;
- ;                SUBX 1,i ; X--;
- ;                BRNE addition ; } while(X != 0);
-                 ;ASLA 
-;fini:            STA res1,d ; res1 = A;
- ;                CHARO '\n', i 
-                ; STRO "nbColone*row = \x00", i 
-;                 DECO res1,d ; cout << res; 
+lopPlcV:         CPA 0,i  ; boucle bateau vertical 
+                 BREQ endlpPl
+                 ;LDA 'V',i
+                 LDA '*',i 
+                 ;STA matrix,x 
+                 STA postem,n
+                 ;ADDX 2,i
+                 ADDX 36, i
+                 STX postem,d
+                 ;ADDX 1,i
+                 LDA sizeT,d 
+               ; STA sizetem, d 
+                 SUBA 1,i
+                 STA sizeT,d
+                 BR lopPlcV
 
-                  
+endlpPl:         CALL display3 ;affiche 
 
-                 ;ASLA    ; here i get my position at x
-                 ;STA   row, d   ; .WORD rang 0
-;                 RET0
+;affiche:         CALL display3  ; fin de loop placer bateau 
+
+                 
+
+                 
+;STOP
+; Si a la positionbateau[rangFeu][ColFeu] on a un char '~' 
+;donc postion bateau[rangFeu][ColFeu] = 'o'
+;Sinon si :
+
+;positionbateau[rangFeu][ColFeu] == '>' ou positionbateau[rangFeu][ColFeu]=='v'{
+
+;positionbateau[rangFeu][ColFeu] = '*'
+
+;CALL destroyBateau (postion bateau, rang, colo+1)
+;CALL destroyBateau (postion bateau, rang, colo-1)
+;CALL destroyBateau (postion bateau, rang+1, colo)
+;CALL destroyBateau (postion bateau, rang-1, colo)
+
+
+
 
 
 ;--------------------------------------------------------------------------------------
@@ -616,97 +775,16 @@ STOP
 
                  
 
-
+KillEnd: STRO MsgEnd, d
 
 
 
 
 
 STOP
-CHARO ln2, d 
-
-
-
-
-;STOP
-LDX      0,i   
-               
-         ;STRO welMsg, d; imprimer le msg de bienvenue 
-         CHARO '\n', i ; imprimer saut de ligne
-         
-;JeuSpace:         
-
-          LDX     0,i
-loopBoat: CPX     matrix,i 
-          BRLE    alphaP   ; alpha print imprimer lettres ABCDEFGHIJKLMNOPQR 
-
-         ;LDX     ix,d        ;load dans X < ix >
-         ;STX     ix,d        ;store dans < ix > la valeur de X
-
-alphaP:  STRO        ALPHA,d  ; les  lettres ABCDEFGHIJKLMNOPQR  ? afficher
-         LDX         0,i
-         STX         ix,d 
-
-
-iBoat:   CPX     iSize,i
-         ;BRGE    fini        ; fini pour arreter le jeu
-         BRGE    MsgFeu      ; Si le nombre de ligne est atteint, et que tous les bateaux 
-                             ;sont affiche, on demande d'entrer les coups. 
-                             ;BRGE    suite ;for(line=0;line < 324; line += 36) {
-                             
-         LDX     0,i         ; Initilize jx to 0
-         STX     jx,d        ; jx <- 0 ;
-         
-         LDA     rantemp, d
-         DECO    rantemp,d
-  
-         CHARO  '|',i 
-
- 
-
-         
-jBoat:   CPX     jSize,i
-         BRGE    then_ix
-         ADDX    ix,d
-
-;Here i should find a way to change tild to the right char. 
-
-
-
-         CHARO    tild,i
-         ;CHARO   matrix,d
-
-         ;CHARO   carHori, i
-
-         LDX     ix,d         
-         LDA     matrix,x    ; rA <- address of ln1,ln2 or ln3
-         STA     ptr,d
-         LDX     ptr,d
-         ADDX    jx,d
-
-         ;LDA     tild,i
-         LDA     matrix,i
-     
-         STA     0,x 
-         LDX     jx,d
-         ADDX    1,i 
         
-         STX     jx,d 
-         BR      jBoat
 
-then_ix: CHARO   '|',i
-         CHARO   '\n',i
-         LDX     ix,d
-         ADDX    1,i
-         STX     ix,d
-         LDA     rantemp,d
-         ADDA    1,i
-         STA     rantemp,d
-         BR      iBoat
-         ;RET0
-
-
-                            
+                       
  
 ;-------------------------------------------------------------------------
 ;------  Declaration, reservation espace memoire et  initialisation ------
@@ -755,6 +833,10 @@ jSize:   .equate 36       ;36 parceque la matrice contien 18 Colonne
 res1:    .BLOCK 2
 res2:    .BLOCK 2
 pos:     .BLOCK 2    ; position de bateau = [col- 'A' + nbColonne*(range-1)]*2
+postem:  .BLOCK 2
+
+ress1:    .BLOCK 2
+posFeu:   .BLOCK 2  ; la position du feu 
 
 
 ptr:     .BLOCk 2 
@@ -770,6 +852,8 @@ emptyO:       .EQUATE 0x006F   ; char o , si aucune partie de boat n'est toucheÈ
 tempCol:      .BLOCK 2
 tempRow:      .BLOCK 2
 rowtemp:      .BLOCK 2
+
+sizeT: .BYTE 1  ; temporaire
 
 col:       .WORD 0  ; la colonne du bateau 
 dir:       .WORD 0  ; direction du bateau 
@@ -788,6 +872,10 @@ colFeu:  .WORD 0 ; colonne du coup entrÈ
 rowFeu:  .WORD 0 ; rangee du coup entrÈ
 FeuColt: .WORD 0 ; colonne du coup entrÈ temporaire 
 FeuRowt: .WORD 0 ; rangee du coup entrÈ temporaire 
+
+
+
+ 
                 
                    
     
@@ -812,16 +900,17 @@ askMsg:  .ASCII "Entrer la description et la position des bateaux \n"
          .ASCII "selon le format suivant, separes par des espaces: \n"
          .ASCII "taille[p/m/g] orientation[h/v] colonne[A-R] rangÈe[1-9] \n"
          .ASCII "ex: ghC4 mvM2 phK9 \n\x00" 
-retMsg:  .ASCII "Je suis de retour\n\x00" 
-retMsgb: .ASCII "Je suis de retour apres verif de grandeur boat\n\x00"
-retMsgD: .ASCII "Je suis de retour apres verif de l'orientation boat\n\x00"
-retMsgC: .ASCII "Je suis de retour apres verif de la colonne boat\n\x00"
-retMsgG: .ASCII "Je suis de retour apres verif du char ' ' \n\x00"
+
 
 MsgFeu: .ASCII "Feu ? volontÈ!\n"
         .ASCII "(entrer les coups ? tirer: colonne [A-R] rangÈe [1-9])\n"
         .ASCII "ex: A3 I5 M3 \n\x00"
 
+MsgEnd: .ASCII "Vous avez anéanti la flotte! \n"
+        .ASCII     "Appuyer sur <Enter> pour jouer à nouveau ou \n"
+        .ASCII      "n'importe quelle autre saisie pour quitter. \n" 
+        .ASCII     "blabla \n"
+        .ASCII     "Au revoir! \n\x00"
 
 .end
 
