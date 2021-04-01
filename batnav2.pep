@@ -1,5 +1,6 @@
 ;@auteur: ADJELE KOSSI DAVID
 ;@codePermanent: ADJK06049703
+; Bonjour je suis l'auteur de ce code et j'aimerais savoir comment vous l'avez eu?
 
 Main:            LDA         0,i
                  STRO        MSG_BVNU,d
@@ -271,18 +272,18 @@ wnext_i:          CHARO       '|',i
 
         
 Fin:             STOP        ; exit();
-;Déclaration des variable
+;DÃ©claration des variable
 
 MSG_BVNU:        .ASCII "Bienvenue au jeu de bataille navale!\n\n\x00"
 MSG_ENTR:        .ASCII "Entrer la description et la position des bateaux\n"
-                 .ASCII "selon le format suivant, séparés par des espaces:\n"
-                 .ASCII "taille[p/m/g] orientation[h/v] colonne[A-R] rangée[1-9]\n"
+                 .ASCII "selon le format suivant, sÃ©parÃ©s par des espaces:\n"
+                 .ASCII "taille[p/m/g] orientation[h/v] colonne[A-R] rangÃ©e[1-9]\n"
                  .ASCII "ex: ghC4 mvM2 phK9\n\x00"
-MSG_TIR:         .ASCII "Feu à volonté!\n"
-                 .ASCII "(entrer les coups à tirer: colonne [A-R] rangée [1-9])\n"
+MSG_TIR:         .ASCII "Feu Ã  volontÃ©!\n"
+                 .ASCII "(entrer les coups Ã  tirer: colonne [A-R] rangÃ©e [1-9])\n"
                  .ASCII "ex: A3 I5 M3\n\x00"
-MSG_WIN:         .ASCII "Vous avez anéanti la flotte!\n"
-                 .ASCII "Appuyer sur <Enter> pour jouer à nouveau ou\n"
+MSG_WIN:         .ASCII "Vous avez anÃ©anti la flotte!\n"
+                 .ASCII "Appuyer sur <Enter> pour jouer Ã  nouveau ou\n"
                  .ASCII "n'importe quelle autre saisie pour quitter.\n\x00"
 MSG_FIN:         .ASCII "Au revoir!\x00"
 MSG_COL:         .ASCII "  ABCDEFGHIJKLMNOPQR\n\x00" 
@@ -312,8 +313,8 @@ j7:              .BLOCK 36 ; #2d18a
 j8:              .BLOCK 36 ; #2d18a 
 j9:              .BLOCK 36 ; #2d18a
 
-line:            .BLOCK 2 ;#2d itérateur line pour tri
-column:          .BLOCK 2 ;#2d itérateur column pour tri
+line:            .BLOCK 2 ;#2d itÃ©rateur line pour tri
+column:          .BLOCK 2 ;#2d itÃ©rateur column pour tri
 range:           .WORD  1
 range1:          .WORD  1
 range2:          .WORD  1
